@@ -9,3 +9,6 @@ local.properties
 captures/
 *.apk
 *.aab
+.cg/
+release.keystore
+release.properties
