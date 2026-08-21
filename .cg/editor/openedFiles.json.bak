@@ -1,0 +1,21 @@
+{
+  "allFiles": [
+    {
+      "file": "/storage/emulated/0/CodeOnTheGoProjects/RSS Cloud Sync /app/src/main/res/values/themes.xml",
+      "selection": {
+        "end": {
+          "column": 12,
+          "index": 356,
+          "line": 8
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    }
+  ],
+  "projectPath": "/storage/emulated/0/CodeOnTheGoProjects/RSS Cloud Sync ",
+  "selectedFile": "/storage/emulated/0/CodeOnTheGoProjects/RSS Cloud Sync /app/src/main/res/values/themes.xml"
+}

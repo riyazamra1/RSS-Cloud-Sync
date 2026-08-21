@@ -2,12 +2,10 @@
 build/
 */build/
 local.properties
-*.apk
-*.aab
 .idea/
 *.iml
 .externalNativeBuild/
 .cxx/
-release.keystore
-release.properties
-.cg/
+captures/
+*.apk
+*.aab
