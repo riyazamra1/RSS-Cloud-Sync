@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/nav_home" android:icon="@android:drawable/ic_menu_view" android:title="Home" />
+        <item android:id="@+id/nav_folders" android:icon="@android:drawable/ic_menu_agenda" android:title="Sync folders" />
+        <item android:id="@+id/nav_automatic" android:icon="@android:drawable/ic_popup_sync" android:title="Automatic sync" />
+        <item android:id="@+id/nav_cloud" android:icon="@android:drawable/ic_menu_upload" android:title="Cloud accounts" />
+        <item android:id="@+id/nav_external" android:icon="@android:drawable/ic_menu_save" android:title="External storage" />
+    </group>
+    <item android:title="Premium">
+        <menu>
+            <item android:id="@+id/nav_premium" android:icon="@android:drawable/btn_star_big_on" android:title="Premium features" />
+            <item android:id="@+id/nav_unlock" android:icon="@android:drawable/ic_lock_idle_lock" android:title="Paid features / Unlock" />
+        </menu>
+    </item>
+    <item android:title="Support">
+        <menu>
+            <item android:id="@+id/nav_about" android:icon="@android:drawable/ic_menu_info_details" android:title="About RSS CLOUD SYNC" />
+            <item android:id="@+id/nav_contact" android:icon="@android:drawable/ic_menu_send" android:title="Contact" />
+        </menu>
+    </item>
+</menu>
