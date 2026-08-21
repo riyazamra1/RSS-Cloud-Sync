@@ -1,760 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/mainRoot"
+    android:id="@+id/mainScrollView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F7F7FC"
+    android:fillViewport="true"
+    android:scrollbars="none"
     tools:context=".MainActivity">
 
-    <!-- TOP BAR -->
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:background="#F7F7FC"
-        android:elevation="0dp"
-        app:title="RSS CLOUD SYNC"
-        app:titleTextColor="#15172A"
-        app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+    <LinearLayout
+        android:id="@+id/contentLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="20dp">
 
-    <ScrollView
-        android:id="@+id/mainScrollView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:fillViewport="true"
-        android:scrollbars="none"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
-            android:id="@+id/contentLayout"
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="24dp">
+            android:layout_height="52dp"
+            android:background="#F7F7FC"
+            android:elevation="0dp"
+            app:title="RSS CLOUD SYNC"
+            app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge"
+            app:titleTextColor="#15172A" />
 
-            <!-- ================================================= -->
-            <!-- PREMIUM BANNER - ONLY LOGO IN MAIN CONTENT -->
-            <!-- ================================================= -->
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/premiumBanner"
-                android:layout_width="match_parent"
-                android:layout_height="156dp"
-                android:layout_marginTop="8dp"
-                app:cardBackgroundColor="#5B22D9"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="3dp"
-                app:strokeWidth="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="14dp">
-
-                    <ImageView
-                        android:id="@+id/bannerLogo"
-                        android:layout_width="112dp"
-                        android:layout_height="112dp"
-                        android:contentDescription="@string/app_name"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/rss_cloud_sync_logo" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Your data, always safe with you"
-                            android:textColor="#FFFFFF"
-                            android:textSize="19sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="7dp"
-                            android:text="Backup • Sync • Access • Anywhere"
-                            android:textColor="#E9E1FF"
-                            android:textSize="12sp" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="15dp"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:gravity="center"
-                                android:text="✓\nSecure"
-                                android:textColor="#FFFFFF"
-                                android:textSize="11sp" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:gravity="center"
-                                android:text="⟳\nReliable"
-                                android:textColor="#FFFFFF"
-                                android:textSize="11sp" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:gravity="center"
-                                android:text="ϟ\nFast"
-                                android:textColor="#FFFFFF"
-                                android:textSize="11sp" />
-
-                        </LinearLayout>
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- BANNER DOTS -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/premiumBanner"
+            android:layout_width="match_parent"
+            android:layout_height="146dp"
+            android:layout_marginTop="4dp"
+            app:cardBackgroundColor="#5B22D9"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="4dp"
+            app:strokeWidth="0dp">
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="20dp"
-                android:layout_marginTop="5dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <View
-                    android:layout_width="32dp"
-                    android:layout_height="5dp"
-                    android:layout_marginEnd="6dp"
-                    android:background="@drawable/bg_indicator_active" />
-
-                <View
-                    android:layout_width="8dp"
-                    android:layout_height="5dp"
-                    android:layout_marginEnd="6dp"
-                    android:background="@drawable/bg_indicator_inactive" />
-
-                <View
-                    android:layout_width="8dp"
-                    android:layout_height="5dp"
-                    android:layout_marginEnd="6dp"
-                    android:background="@drawable/bg_indicator_inactive" />
-
-                <View
-                    android:layout_width="8dp"
-                    android:layout_height="5dp"
-                    android:background="@drawable/bg_indicator_inactive" />
-
-            </LinearLayout>
-
-            <!-- ================================================= -->
-            <!-- APPEARANCE -->
-            <!-- ================================================= -->
-
-            <TextView
-                android:id="@+id/appearanceTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="APPEARANCE"
-                android:textColor="#15172A"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:id="@+id/appearanceCard"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_appearance_selector"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="3dp">
-
-                <TextView
-                    android:id="@+id/lightButton"
-                    android:layout_width="0dp"
-                    android:layout_height="42dp"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="☀  Light"
-                    android:textColor="#FFFFFF"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/systemButton"
-                    android:layout_width="0dp"
-                    android:layout_height="42dp"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="⚙  System"
-                    android:textColor="#25283A"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/darkButton"
-                    android:layout_width="0dp"
-                    android:layout_height="42dp"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="◐  Dark"
-                    android:textColor="#25283A"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-            <!-- ================================================= -->
-            <!-- SYNC STATUS -->
-            <!-- ================================================= -->
-
-            <TextView
-                android:id="@+id/syncStatusHeader"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:text="SYNC STATUS"
-                android:textColor="#15172A"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/syncStatusCard"
-                android:layout_width="match_parent"
-                android:layout_height="188dp"
-                android:layout_marginTop="8dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="2dp"
-                app:strokeColor="#E4E4EC"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="118dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <!-- REAL GRADIENT CIRCLE -->
-                        <com.riyaz.rsscloudsync.GradientProgressView
-                            android:id="@+id/gradientProgress"
-                            android:layout_width="118dp"
-                            android:layout_height="118dp"
-                            app:progress="72" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="14dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal">
-
-                                <TextView
-                                    android:layout_width="9dp"
-                                    android:layout_height="9dp"
-                                    android:text="●"
-                                    android:textColor="#36C88B"
-                                    android:textSize="12sp" />
-
-                                <TextView
-                                    android:id="@+id/syncStatusText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="7dp"
-                                    android:text="Ready to sync"
-                                    android:textColor="#15172A"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold" />
-
-                            </LinearLayout>
-
-                            <TextView
-                                android:id="@+id/syncSubtitle"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="6dp"
-                                android:text="Everything is up to date"
-                                android:textColor="#73788A"
-                                android:textSize="12sp" />
-
-                            <TextView
-                                android:id="@+id/lastSyncText"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
-                                android:text="Last sync: Never"
-                                android:textColor="#73788A"
-                                android:textSize="12sp" />
-
-                        </LinearLayout>
-
-                    </LinearLayout>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/syncNowButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="10dp"
-                        android:text="⟳   SYNC NOW"
-                        android:textColor="#FFFFFF"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:insetTop="0dp"
-                        android:insetBottom="0dp"
-                        android:background="@drawable/bg_gradient_button"
-                        app:backgroundTint="@null"
-                        app:cornerRadius="14dp" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ================================================= -->
-            <!-- CLOUD ACCOUNTS -->
-            <!-- ================================================= -->
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
+                android:layout_height="match_parent"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/cloudStorageTitle"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp">
+                <ImageView
+                    android:id="@+id/bannerLogo"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:contentDescription="@string/app_name"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/rss_cloud_sync_logo" />
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
                     android:layout_weight="1"
-                    android:text="CLOUD ACCOUNTS"
-                    android:textColor="#15172A"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/cloudManageText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Manage  ›"
-                    android:textColor="#73788A"
-                    android:textSize="12sp" />
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/cloudStorageSubtitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="Connect your cloud accounts"
-                android:textColor="#73788A"
-                android:textSize="12sp" />
-
-            <!-- CLOUD PROVIDERS -->
-            <LinearLayout
-                android:id="@+id/cloudProviderRow"
-                android:layout_width="match_parent"
-                android:layout_height="145dp"
-                android:layout_marginTop="9dp"
-                android:orientation="horizontal">
-
-                <!-- GOOGLE DRIVE -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/googleDriveCard"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginEnd="4dp"
-                    android:layout_weight="1"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:strokeColor="#E4E4EC"
-                    app:strokeWidth="1dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center_horizontal"
-                        android:orientation="vertical"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="9dp">
-
-                        <ImageView
-                            android:id="@+id/googleDriveIcon"
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
-                            android:contentDescription="Google Drive"
-                            android:src="@drawable/ic_google_drive" />
-
-                        <TextView
-                            android:id="@+id/googleDriveTitle"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:gravity="center"
-                            android:text="Google Drive"
-                            android:textColor="#15172A"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/googleDriveStatus"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:gravity="center"
-                            android:text="Not connected"
-                            android:textColor="#73788A"
-                            android:textSize="10sp" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/googleDriveConnectButton"
-                            android:layout_width="match_parent"
-                            android:layout_height="36dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginTop="7dp"
-                            android:layout_marginEnd="8dp"
-                            android:text="CONNECT"
-                            android:textColor="#FFFFFF"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:background="@drawable/bg_gradient_button"
-                            app:backgroundTint="@null"
-                            app:cornerRadius="18dp" />
-
+                    android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Your data, always safe with you" android:textColor="#FFFFFF" android:textSize="18sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Backup • Sync • Access • Anywhere" android:textColor="#E9E1FF" android:textSize="11sp" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="horizontal">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="✓\nSecure" android:textColor="#FFFFFF" android:textSize="10sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="⟳\nReliable" android:textColor="#FFFFFF" android:textSize="10sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="ϟ\nFast" android:textColor="#FFFFFF" android:textSize="10sp" />
                     </LinearLayout>
-
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- ONEDRIVE -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/oneDriveCard"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"
-                    android:layout_weight="1"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:strokeColor="#E4E4EC"
-                    app:strokeWidth="1dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center_horizontal"
-                        android:orientation="vertical"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="9dp">
-
-                        <ImageView
-                            android:id="@+id/oneDriveIcon"
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
-                            android:contentDescription="OneDrive"
-                            android:src="@drawable/ic_onedrive" />
-
-                        <TextView
-                            android:id="@+id/oneDriveTitle"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:gravity="center"
-                            android:text="OneDrive"
-                            android:textColor="#15172A"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/oneDriveStatus"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:gravity="center"
-                            android:text="Not connected"
-                            android:textColor="#73788A"
-                            android:textSize="10sp" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/oneDriveConnectButton"
-                            android:layout_width="match_parent"
-                            android:layout_height="36dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginTop="7dp"
-                            android:layout_marginEnd="8dp"
-                            android:text="CONNECT"
-                            android:textColor="#FFFFFF"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:background="@drawable/bg_gradient_button"
-                            app:backgroundTint="@null"
-                            app:cornerRadius="18dp" />
-
-                    </LinearLayout>
-
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- DROPBOX -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/dropboxCard"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="4dp"
-                    android:layout_weight="1"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:strokeColor="#E4E4EC"
-                    app:strokeWidth="1dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center_horizontal"
-                        android:orientation="vertical"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="9dp">
-
-                        <ImageView
-                            android:id="@+id/dropboxIcon"
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
-                            android:contentDescription="Dropbox"
-                            android:src="@drawable/ic_dropbox" />
-
-                        <TextView
-                            android:id="@+id/dropboxTitle"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:gravity="center"
-                            android:text="Dropbox"
-                            android:textColor="#15172A"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/dropboxStatus"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:gravity="center"
-                            android:text="Not connected"
-                            android:textColor="#73788A"
-                            android:textSize="10sp" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/dropboxConnectButton"
-                            android:layout_width="match_parent"
-                            android:layout_height="36dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginTop="7dp"
-                            android:layout_marginEnd="8dp"
-                            android:text="CONNECT"
-                            android:textColor="#FFFFFF"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:background="@drawable/bg_gradient_button"
-                            app:backgroundTint="@null"
-                            app:cornerRadius="18dp" />
-
-                    </LinearLayout>
-
-                </com.google.android.material.card.MaterialCardView>
-
-            </LinearLayout>
-
-            <!-- ================================================= -->
-            <!-- SYNC FOLDERS -->
-            <!-- ================================================= -->
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/foldersCard"
-                android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:layout_marginTop="12dp"
-                android:clickable="true"
-                android:focusable="true"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:strokeColor="#E4E4EC"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="@drawable/bg_icon_purple"
-                        android:padding="12dp"
-                        android:src="@drawable/ic_folder"
-                        android:tint="#7048E8" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Sync Folders"
-                            android:textColor="#15172A"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Choose folders to sync"
-                            android:textColor="#73788A"
-                            android:textSize="11sp" />
-
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="#73788A"
-                        android:textSize="27sp" />
-
                 </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ================================================= -->
-            <!-- AUTOMATIC SYNC -->
-            <!-- ================================================= -->
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/syncSetupCard"
-                android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:layout_marginTop="10dp"
-                android:clickable="true"
-                android:focusable="true"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:strokeColor="#E4E4EC"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="@drawable/bg_icon_green"
-                        android:padding="12dp"
-                        android:src="@drawable/ic_bolt"
-                        android:tint="#22B88A" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Automatic Sync"
-                            android:textColor="#15172A"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Keep your data safe automatically"
-                            android:textColor="#73788A"
-                            android:textSize="11sp" />
-
-                    </LinearLayout>
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/automaticSyncSwitch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="false"
-                        app:thumbTint="#FFFFFF"
-                        app:trackTint="#D9D9E3" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
+        <LinearLayout android:layout_width="match_parent" android:layout_height="12dp" android:gravity="center" android:orientation="horizontal">
+            <View android:layout_width="28dp" android:layout_height="4dp" android:layout_marginEnd="5dp" android:background="@drawable/bg_indicator_active" />
+            <View android:layout_width="7dp" android:layout_height="4dp" android:layout_marginEnd="5dp" android:background="@drawable/bg_indicator_inactive" />
+            <View android:layout_width="7dp" android:layout_height="4dp" android:layout_marginEnd="5dp" android:background="@drawable/bg_indicator_inactive" />
+            <View android:layout_width="7dp" android:layout_height="4dp" android:background="@drawable/bg_indicator_inactive" />
         </LinearLayout>
 
-    </ScrollView>
+        <TextView android:id="@+id/appearanceTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="APPEARANCE" android:textColor="#15172A" android:textSize="14sp" android:textStyle="bold" />
+        <LinearLayout android:id="@+id/appearanceCard" android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="6dp" android:background="@drawable/bg_appearance_selector" android:gravity="center" android:orientation="horizontal" android:padding="3dp">
+            <TextView android:id="@+id/lightButton" android:layout_width="0dp" android:layout_height="38dp" android:layout_weight="1" android:gravity="center" android:text="☀  Light" android:textColor="#25283A" android:textSize="12sp" android:textStyle="bold" />
+            <TextView android:id="@+id/systemButton" android:layout_width="0dp" android:layout_height="38dp" android:layout_weight="1" android:gravity="center" android:text="⚙  System" android:textColor="#25283A" android:textSize="12sp" android:textStyle="bold" />
+            <TextView android:id="@+id/darkButton" android:layout_width="0dp" android:layout_height="38dp" android:layout_weight="1" android:gravity="center" android:text="◐  Dark" android:textColor="#25283A" android:textSize="12sp" android:textStyle="bold" />
+        </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView android:id="@+id/syncStatusHeader" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:text="SYNC STATUS" android:textColor="#15172A" android:textSize="14sp" android:textStyle="bold" />
+        <com.google.android.material.card.MaterialCardView android:id="@+id/syncStatusCard" android:layout_width="match_parent" android:layout_height="214dp" android:layout_marginTop="6dp" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="18dp" app:cardElevation="3dp" app:strokeColor="#E6E6EF" app:strokeWidth="1dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="12dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="130dp" android:gravity="center_vertical" android:orientation="horizontal">
+                    <com.riyaz.rsscloudsync.GradientProgressView android:id="@+id/gradientProgress" android:layout_width="112dp" android:layout_height="112dp" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                            <TextView android:layout_width="8dp" android:layout_height="8dp" android:text="●" android:textColor="#36C88B" android:textSize="10sp" />
+                            <TextView android:id="@+id/syncStatusText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="Ready to sync" android:textColor="#15172A" android:textSize="15sp" android:textStyle="bold" />
+                        </LinearLayout>
+                        <TextView android:id="@+id/syncSubtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Everything is up to date" android:textColor="#73788A" android:textSize="11sp" />
+                        <TextView android:id="@+id/lastSyncText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Last sync: Never" android:textColor="#73788A" android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+                <com.google.android.material.button.MaterialButton android:id="@+id/syncNowButton" android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="8dp" android:background="@drawable/bg_gradient_button" android:insetTop="0dp" android:insetBottom="0dp" android:text="⟳   SYNC NOW" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold" app:backgroundTint="@null" app:cornerRadius="14dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <TextView android:id="@+id/cloudStorageTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="CLOUD ACCOUNTS" android:textColor="#15172A" android:textSize="14sp" android:textStyle="bold" />
+            <TextView android:id="@+id/cloudManageText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:clickable="true" android:focusable="true" android:text="Manage  ›" android:textColor="#6F63E8" android:textSize="11sp" android:textStyle="bold" />
+        </LinearLayout>
+        <TextView android:id="@+id/cloudStorageSubtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Connect your cloud accounts" android:textColor="#73788A" android:textSize="11sp" />
+
+        <LinearLayout android:id="@+id/cloudProviderRow" android:layout_width="match_parent" android:layout_height="140dp" android:layout_marginTop="7dp" android:orientation="horizontal">
+            <com.google.android.material.card.MaterialCardView android:id="@+id/googleDriveCard" android:layout_width="0dp" android:layout_height="match_parent" android:layout_marginEnd="4dp" android:layout_weight="1" android:clickable="true" android:focusable="true" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="16dp" app:cardElevation="2dp" app:strokeColor="#E6E6EF" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_horizontal" android:orientation="vertical" android:padding="10dp">
+                    <ImageView android:id="@+id/googleDriveIcon" android:layout_width="36dp" android:layout_height="36dp" android:contentDescription="Google Drive" android:src="@drawable/ic_google_drive" />
+                    <TextView android:id="@+id/googleDriveTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:gravity="center" android:text="Google Drive" android:textColor="#15172A" android:textSize="11sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/googleDriveStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="Not connected" android:textColor="#73788A" android:textSize="9sp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/googleDriveConnectButton" android:layout_width="match_parent" android:layout_height="34dp" android:layout_marginTop="5dp" android:text="CONNECT" android:textColor="#FFFFFF" android:textSize="9sp" android:textStyle="bold" android:insetTop="0dp" android:insetBottom="0dp" app:cornerRadius="17dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView android:id="@+id/oneDriveCard" android:layout_width="0dp" android:layout_height="match_parent" android:layout_marginStart="4dp" android:layout_marginEnd="4dp" android:layout_weight="1" android:clickable="true" android:focusable="true" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="16dp" app:cardElevation="2dp" app:strokeColor="#E6E6EF" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_horizontal" android:orientation="vertical" android:padding="10dp">
+                    <ImageView android:layout_width="36dp" android:layout_height="36dp" android:contentDescription="OneDrive" android:src="@drawable/ic_onedrive" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:gravity="center" android:text="OneDrive" android:textColor="#15172A" android:textSize="11sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="Not connected" android:textColor="#73788A" android:textSize="9sp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/oneDriveConnectButton" android:layout_width="match_parent" android:layout_height="34dp" android:layout_marginTop="5dp" android:text="CONNECT" android:textColor="#FFFFFF" android:textSize="9sp" android:textStyle="bold" android:insetTop="0dp" android:insetBottom="0dp" app:cornerRadius="17dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView android:id="@+id/dropboxCard" android:layout_width="0dp" android:layout_height="match_parent" android:layout_marginStart="4dp" android:layout_weight="1" android:clickable="true" android:focusable="true" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="16dp" app:cardElevation="2dp" app:strokeColor="#E6E6EF" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_horizontal" android:orientation="vertical" android:padding="10dp">
+                    <ImageView android:layout_width="36dp" android:layout_height="36dp" android:contentDescription="Dropbox" android:src="@drawable/ic_dropbox" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:gravity="center" android:text="Dropbox" android:textColor="#15172A" android:textSize="11sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="Not connected" android:textColor="#73788A" android:textSize="9sp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/dropboxConnectButton" android:layout_width="match_parent" android:layout_height="34dp" android:layout_marginTop="5dp" android:text="CONNECT" android:textColor="#FFFFFF" android:textSize="9sp" android:textStyle="bold" android:insetTop="0dp" android:insetBottom="0dp" app:cornerRadius="17dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="SYNC TOOLS" android:textColor="#15172A" android:textSize="14sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <com.google.android.material.card.MaterialCardView android:id="@+id/foldersCard" android:layout_width="match_parent" android:layout_height="64dp" android:layout_marginTop="7dp" android:clickable="true" android:focusable="true" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="15dp" app:cardElevation="2dp" app:strokeColor="#E6E6EF" app:strokeWidth="1dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="14dp">
+                <TextView android:layout_width="40dp" android:layout_height="40dp" android:gravity="center" android:text="📁" android:textSize="22sp" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sync folders" android:textColor="#15172A" android:textSize="13sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Choose your local sync folder" android:textColor="#73788A" android:textSize="10sp" />
+                </LinearLayout>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textColor="#73788A" android:textSize="24sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView android:id="@+id/syncSetupCard" android:layout_width="match_parent" android:layout_height="64dp" android:layout_marginTop="6dp" android:clickable="true" android:focusable="true" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="15dp" app:cardElevation="2dp" app:strokeColor="#E6E6EF" app:strokeWidth="1dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="14dp">
+                <TextView android:layout_width="40dp" android:layout_height="40dp" android:gravity="center" android:text="⚙" android:textColor="#6F63E8" android:textSize="22sp" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Automatic sync" android:textColor="#15172A" android:textSize="13sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Schedule and sync direction" android:textColor="#73788A" android:textSize="10sp" />
+                </LinearLayout>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textColor="#73788A" android:textSize="24sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
