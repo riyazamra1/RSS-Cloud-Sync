@@ -12,3 +12,5 @@ captures/
 .cg/
 release.keystore
 release.properties
+release.keystore
+release.properties
