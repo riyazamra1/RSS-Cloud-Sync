@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="170dp" android:orientation="vertical" android:gravity="center_vertical" android:padding="22dp" android:background="#5B22D9">
+    <ImageView android:layout_width="58dp" android:layout_height="58dp" android:src="@drawable/rss_cloud_sync_logo" android:scaleType="fitCenter" android:contentDescription="RSS CLOUD SYNC" />
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="RSS CLOUD SYNC" android:textColor="#FFFFFF" android:textSize="20sp" android:textStyle="bold" />
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Secure • Simple • Reliable" android:textColor="#E9E1FF" android:textSize="11sp" />
+</LinearLayout>
