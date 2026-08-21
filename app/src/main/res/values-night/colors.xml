@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Splash -->
+    <color name="splash_background">#050B18</color>
+
+    <!-- Main application colors -->
+    <color name="app_primary">#7050B5</color>
+
+    <!-- Dark theme -->
+    <color name="dark_background">#050B18</color>
+    <color name="dark_surface">#0D1628</color>
+    <color name="dark_card">#0D1628</color>
+    <color name="dark_text">#FFFFFF</color>
+    <color name="dark_secondary_text">#8798B3</color>
+    <color name="dark_border">#263957</color>
+
+</resources>

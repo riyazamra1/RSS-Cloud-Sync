@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Splash -->
+    <color name="splash_background">#F7F9F5</color>
+
+    <!-- Main application colors -->
+    <color name="app_primary">#4CAF50</color>
+
+    <!-- Light theme -->
+    <color name="light_background">#F7F9F5</color>
+    <color name="light_surface">#FFFFFF</color>
+    <color name="light_card">#FFFFFF</color>
+    <color name="light_text">#17201A</color>
+    <color name="light_secondary_text">#68736B</color>
+    <color name="light_border">#DDE5DE</color>
+
+</resources>
