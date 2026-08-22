@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="?attr/colorSurface">
+    <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="56dp" android:background="@android:color/transparent" app:titleTextColor="?attr/colorOnSurface" />
+    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:scrollbars="none">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp" android:paddingBottom="32dp">
+            <ImageView android:layout_width="104dp" android:layout_height="104dp" android:layout_gravity="center_horizontal" android:src="@drawable/rss_cloud_sync_logo" android:contentDescription="RSS CLOUD SYNC" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:gravity="center" android:text="RSS CLOUD SYNC" android:textColor="?attr/colorOnSurface" android:textSize="25sp" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:gravity="center" android:text="Secure • Simple • Reliable" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="12sp" />
+
+            <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="About the app" android:textColor="?attr/colorOnSurface" android:textSize="17sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="RSS CLOUD SYNC helps you keep important files synchronized between your device and cloud storage. The app is designed to stay lightweight, simple and reliable while giving you clear control over your sync settings." android:textColor="?attr/colorOnSurfaceVariant" android:textSize="13sp" android:lineSpacingExtra="3dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="FREE" android:textColor="?attr/colorOnSurface" android:textSize="17sp" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="• Two-way Sync\n• Manual Sync" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="13sp" android:lineSpacingExtra="4dp" />
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="PREMIUM" android:textColor="?attr/colorOnSurface" android:textSize="17sp" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Upload and download mirror modes, delete-after-sync modes, automatic scheduling, multiple folder pairs, advanced filtering, priority sync, extended history and no ads." android:textColor="?attr/colorOnSurfaceVariant" android:textSize="13sp" android:lineSpacingExtra="3dp" />
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="Version 1.0" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="© RSS CLOUD SYNC" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
