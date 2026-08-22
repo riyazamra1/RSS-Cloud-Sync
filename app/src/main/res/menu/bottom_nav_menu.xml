@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/bottom_home" android:icon="@android:drawable/ic_menu_view" android:title="Home" />
+    <item android:id="@+id/bottom_sync" android:icon="@android:drawable/ic_popup_sync" android:title="Sync" />
+    <item android:id="@+id/bottom_cloud" android:icon="@android:drawable/ic_menu_upload" android:title="Cloud" />
+    <item android:id="@+id/bottom_premium" android:icon="@android:drawable/btn_star_big_on" android:title="Premium" />
+</menu>
