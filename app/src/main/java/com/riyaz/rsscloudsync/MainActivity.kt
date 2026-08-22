@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.riyaz.rsscloudsync.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -68,16 +69,20 @@ class MainActivity : AppCompatActivity() {
         binding.syncSubtitle.setTextColor(secondary)
         binding.lastSyncText.setTextColor(secondary)
 
-        listOf(binding.syncStatusCard, binding.googleDriveCard, binding.oneDriveCard, binding.dropboxCard, binding.megaCard, binding.boxCard, binding.webDavCard).forEach {
+        listOf(binding.syncStatusCard, binding.googleDriveCard, binding.oneDriveCard, binding.dropboxCard).forEach {
             it.setCardBackgroundColor(surface)
             it.strokeColor = outline
             it.cardElevation = 0f
         }
+        listOf(R.id.megaCard, R.id.boxCard, R.id.webDavCard).forEach { id ->
+            binding.root.findViewById<MaterialCardView?>(id)?.apply {
+                setCardBackgroundColor(surface)
+                strokeColor = outline
+                cardElevation = 0f
+            }
+        }
 
-        binding.premiumBanner.background = gradient(
-            if (dark) intArrayOf(Color.rgb(39, 14, 94), Color.rgb(93, 28, 174))
-            else intArrayOf(Color.rgb(91, 34, 217), Color.rgb(116, 57, 226)), 26f
-        )
+        binding.premiumBanner.background = gradient(if (dark) intArrayOf(Color.rgb(39, 14, 94), Color.rgb(93, 28, 174)) else intArrayOf(Color.rgb(91, 34, 217), Color.rgb(116, 57, 226)), 26f)
 
         val selectedText = Color.WHITE
         val unselectedText = if (dark) Color.rgb(215, 213, 225) else Color.rgb(34, 31, 46)
@@ -117,9 +122,9 @@ class MainActivity : AppCompatActivity() {
         binding.googleDriveCard.setOnClickListener { openCloud("Google Drive") }
         binding.oneDriveCard.setOnClickListener { openCloud("OneDrive") }
         binding.dropboxCard.setOnClickListener { openCloud("Dropbox") }
-        binding.megaCard.setOnClickListener { openCloud("MEGA") }
-        binding.boxCard.setOnClickListener { openCloud("Box") }
-        binding.webDavCard.setOnClickListener { openCloud("WebDAV") }
+        listOf(Pair(R.id.megaCard, "MEGA"), Pair(R.id.boxCard, "Box"), Pair(R.id.webDavCard, "WebDAV")).forEach { (id, provider) ->
+            binding.root.findViewById<MaterialCardView?>(id)?.setOnClickListener { openCloud(provider) }
+        }
         binding.googleDriveConnectButton.setOnClickListener { openCloud("Google Drive") }
         binding.oneDriveConnectButton.setOnClickListener { openCloud("OneDrive") }
         binding.dropboxConnectButton.setOnClickListener { openCloud("Dropbox") }
