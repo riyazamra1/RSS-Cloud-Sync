@@ -9,19 +9,16 @@ echo "========================================"
 echo " RSS CLOUD SYNC - GitHub Update"
 echo "========================================"
 echo
-
 echo "[1/3] Getting latest changes from GitHub..."
 git pull --ff-only origin main
-
 echo
-
-echo "[2/3] Making Gradle wrapper executable..."
+echo "[2/3] Preparing Gradle wrapper..."
 chmod +x ./gradlew 2>/dev/null || true
 echo
-
 echo "[3/3] Building debug APK..."
-./gradlew clean assembleDebug
-
+# Code On The Go may not allow executable files on /storage/emulated/0,
+# so invoke Gradle through the shell instead of ./gradlew.
+sh ./gradlew clean assembleDebug
 echo
 echo "========================================"
 echo " BUILD COMPLETE"
