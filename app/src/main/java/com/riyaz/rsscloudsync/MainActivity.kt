@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         binding.syncSubtitle.setTextColor(secondary)
         binding.lastSyncText.setTextColor(secondary)
 
-        listOf(binding.syncStatusCard, binding.googleDriveCard, binding.oneDriveCard, binding.dropboxCard).forEach {
+        listOf(binding.syncStatusCard, binding.googleDriveCard, binding.oneDriveCard, binding.dropboxCard, binding.megaCard, binding.boxCard, binding.webDavCard).forEach {
             it.setCardBackgroundColor(surface)
             it.strokeColor = outline
             it.cardElevation = 0f
@@ -117,6 +117,9 @@ class MainActivity : AppCompatActivity() {
         binding.googleDriveCard.setOnClickListener { openCloud("Google Drive") }
         binding.oneDriveCard.setOnClickListener { openCloud("OneDrive") }
         binding.dropboxCard.setOnClickListener { openCloud("Dropbox") }
+        binding.megaCard.setOnClickListener { openCloud("MEGA") }
+        binding.boxCard.setOnClickListener { openCloud("Box") }
+        binding.webDavCard.setOnClickListener { openCloud("WebDAV") }
         binding.googleDriveConnectButton.setOnClickListener { openCloud("Google Drive") }
         binding.oneDriveConnectButton.setOnClickListener { openCloud("OneDrive") }
         binding.dropboxConnectButton.setOnClickListener { openCloud("Dropbox") }
@@ -135,7 +138,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_home -> binding.mainScrollView.smoothScrollTo(0, 0)
                 R.id.nav_folders -> startActivity(Intent(this, FolderSyncActivity::class.java))
                 R.id.nav_automatic -> openAutomaticSync()
-                R.id.nav_cloud -> scrollToCloudAccounts()
+                R.id.nav_cloud -> startActivity(Intent(this, CloudAccountsActivity::class.java))
                 R.id.nav_external -> startActivity(Intent(this, FolderSyncActivity::class.java))
                 R.id.nav_free, R.id.nav_free_manual -> startActivity(Intent(this, FreeFeaturesActivity::class.java))
                 R.id.nav_premium, R.id.nav_unlock -> startActivity(Intent(this, PremiumActivity::class.java))
@@ -153,7 +156,7 @@ class MainActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.bottom_home -> { binding.mainScrollView.smoothScrollTo(0, 0); true }
                 R.id.bottom_sync -> { startActivity(Intent(this, FolderSyncActivity::class.java)); true }
-                R.id.bottom_cloud -> { scrollToCloudAccounts(); true }
+                R.id.bottom_cloud -> { startActivity(Intent(this, CloudAccountsActivity::class.java)); true }
                 R.id.bottom_premium -> { startActivity(Intent(this, PremiumActivity::class.java)); true }
                 else -> false
             }
@@ -168,9 +171,5 @@ class MainActivity : AppCompatActivity() {
     private fun openCloud(provider: String) {
         appPrefs.edit().putString("selected_cloud_provider", provider).apply()
         startActivity(Intent(this, CloudAccountsActivity::class.java))
-    }
-
-    private fun scrollToCloudAccounts() {
-        binding.mainScrollView.post { binding.mainScrollView.smoothScrollTo(0, binding.cloudAccountsScroll.top) }
     }
 }
