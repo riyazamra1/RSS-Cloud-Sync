@@ -5,19 +5,66 @@ import androidx.appcompat.app.AppCompatActivity
 import com.riyaz.rsscloudsync.databinding.ActivityFeatureListBinding
 
 class PremiumActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityFeatureListBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityFeatureListBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "PREMIUM"
-        binding.pageTitle.text = "PREMIUM"
-        binding.pageSubtitle.text = "Unlock the complete RSS CLOUD SYNC toolkit."
-        binding.featureList.text = "✓  Everything in FREE\n\n✓  Upload only\n✓  Upload mirror\n✓  Upload then delete\n✓  Download only\n✓  Download mirror\n✓  Download then delete\n\n✓  Automatic sync and scheduling\n✓  Multiple folder pairs\n✓  Advanced file filtering\n✓  Priority sync\n✓  Extended sync history\n✓  No ads"
+
+        binding.pageTitle.text = "FREE vs PREMIUM"
+        binding.pageSubtitle.text = "1 user • 1 device"
+
+        binding.featureList.text = """
+FREE
+
+✓ Two-way sync
+✓ Manual sync
+✓ Basic sync status
+
+
+PREMIUM
+
+✓ Everything in FREE
+✓ Upload only
+✓ Upload mirror
+✓ Upload then delete
+✓ Download only
+✓ Download mirror
+✓ Download then delete
+✓ Automatic sync and scheduling
+✓ Multiple folder pairs
+✓ Advanced file filtering
+✓ Priority sync
+✓ Extended sync history
+✓ No ads
+
+
+PREMIUM MEMBERSHIP
+
+1 user • 1 device
+
+Monthly
+Rs. 500 / month
+
+Annual
+Rs. 4,500 / year
+
+One-time
+Rs. 12,500 lifetime
+
+Choose the plan that works best for you.
+""".trimIndent()
     }
 
-    override fun onSupportNavigateUp(): Boolean { finish(); return true }
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
+    }
 }
