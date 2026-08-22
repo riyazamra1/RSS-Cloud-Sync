@@ -5,9 +5,7 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
@@ -25,7 +23,6 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, true)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setupAppearanceButtons()
         setupGradientButtons()
         setupNavigation()
@@ -33,7 +30,6 @@ class MainActivity : AppCompatActivity() {
         setupDrawer()
         setupBottomNavigation()
         applyAppearance()
-
         binding.gradientProgress.setProgress(72f, false)
     }
 
@@ -43,15 +39,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupAppearanceButtons() {
-        binding.lightButton.setOnClickListener {
-            setMode("light", AppCompatDelegate.MODE_NIGHT_NO)
-        }
-        binding.systemButton.setOnClickListener {
-            setMode("system", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-        }
-        binding.darkButton.setOnClickListener {
-            setMode("dark", AppCompatDelegate.MODE_NIGHT_YES)
-        }
+        binding.lightButton.setOnClickListener { setMode("light", AppCompatDelegate.MODE_NIGHT_NO) }
+        binding.systemButton.setOnClickListener { setMode("system", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) }
+        binding.darkButton.setOnClickListener { setMode("dark", AppCompatDelegate.MODE_NIGHT_YES) }
     }
 
     private fun setMode(mode: String, nightMode: Int) {
@@ -68,10 +58,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         val background = if (dark) Color.rgb(11, 14, 24) else Color.rgb(247, 249, 255)
-        val surface = if (dark) Color.rgb(22, 25, 37) else Color.WHITE
         val text = if (dark) Color.rgb(245, 245, 250) else Color.rgb(24, 22, 36)
         val secondary = if (dark) Color.rgb(178, 177, 194) else Color.rgb(105, 101, 120)
-        val outline = if (dark) Color.rgb(54, 57, 72) else Color.rgb(226, 222, 234)
 
         binding.root.setBackgroundColor(background)
         binding.mainScrollView.setBackgroundColor(background)
@@ -82,49 +70,24 @@ class MainActivity : AppCompatActivity() {
         binding.syncSubtitle.setTextColor(secondary)
         binding.lastSyncText.setTextColor(secondary)
 
-        binding.syncStatusCard.apply {
-            setCardBackgroundColor(surface)
-            strokeColor = outline
-            cardElevation = 0f
-        }
+        // Keep card styling in XML and only remove elevation here.
+        binding.syncStatusCard.elevation = 0f
+        binding.foldersCard.elevation = 0f
+        binding.syncSetupCard.elevation = 0f
 
         for (i in 0 until binding.cloudProviderRow.childCount) {
-            val card = binding.cloudProviderRow.getChildAt(i) as? MaterialCardView ?: continue
-            card.setCardBackgroundColor(surface)
-            card.strokeColor = outline
-            card.cardElevation = 0f
-        }
-
-        binding.foldersCard.apply {
-            setCardBackgroundColor(surface)
-            strokeColor = outline
-            cardElevation = 0f
-        }
-        binding.syncSetupCard.apply {
-            setCardBackgroundColor(surface)
-            strokeColor = outline
-            cardElevation = 0f
+            binding.cloudProviderRow.getChildAt(i).elevation = 0f
         }
 
         binding.premiumBanner.background = gradient(
-            if (dark) {
-                intArrayOf(Color.rgb(39, 14, 94), Color.rgb(93, 28, 174))
-            } else {
-                intArrayOf(Color.rgb(91, 34, 217), Color.rgb(116, 57, 226))
-            },
+            if (dark) intArrayOf(Color.rgb(39, 14, 94), Color.rgb(93, 28, 174))
+            else intArrayOf(Color.rgb(91, 34, 217), Color.rgb(116, 57, 226)),
             26f
         )
 
         val selectedText = Color.WHITE
         val unselectedText = if (dark) Color.rgb(215, 213, 225) else Color.rgb(34, 31, 46)
-
-        val appearanceButtons = listOf(
-            binding.lightButton,
-            binding.systemButton,
-            binding.darkButton
-        )
-
-        appearanceButtons.forEach { button ->
+        listOf(binding.lightButton, binding.systemButton, binding.darkButton).forEach { button ->
             val selected = when (mode) {
                 "light" -> button == binding.lightButton
                 "dark" -> button == binding.darkButton
@@ -147,21 +110,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyGradient(button: MaterialButton) {
-        button.background = gradient(
-            intArrayOf(Color.rgb(116, 73, 232), Color.rgb(214, 72, 175)),
-            60f
-        )
+        button.background = gradient(intArrayOf(Color.rgb(116, 73, 232), Color.rgb(214, 72, 175)), 60f)
         button.setTextColor(Color.WHITE)
     }
 
     private fun setupCloudCards() {
         val providers = arrayOf("Google Drive", "OneDrive", "Dropbox", "MEGA", "Box", "WebDAV")
         val row = binding.cloudProviderRow
-
         for (index in 0 until row.childCount) {
             val card = row.getChildAt(index) as? MaterialCardView ?: continue
             val provider = providers.getOrElse(index) { "Cloud" }
-
             card.isClickable = true
             card.isFocusable = true
             card.setOnClickListener { openCloud(provider) }
@@ -171,23 +129,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun setButtonsInsideCard(parent: ViewGroup, provider: String) {
         for (i in 0 until parent.childCount) {
-            val child = parent.getChildAt(i)
-            when (child) {
-                is MaterialButton -> child.setOnClickListener {
-                    openCloud(provider)
-                }
+            when (val child = parent.getChildAt(i)) {
+                is MaterialButton -> child.setOnClickListener { openCloud(provider) }
                 is ViewGroup -> setButtonsInsideCard(child, provider)
             }
         }
     }
 
     private fun setupNavigation() {
-        binding.foldersCard.setOnClickListener {
-            startActivity(Intent(this, FolderSyncActivity::class.java))
-        }
-        binding.syncSetupCard.setOnClickListener {
-            openAutomaticSync()
-        }
+        binding.foldersCard.setOnClickListener { startActivity(Intent(this, FolderSyncActivity::class.java)) }
+        binding.syncSetupCard.setOnClickListener { openAutomaticSync() }
         binding.syncNowButton.setOnClickListener {
             binding.syncStatusText.text = "Sync complete"
             binding.syncSubtitle.text = "Everything is up to date"
@@ -197,10 +148,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupDrawer() {
-        binding.toolbar.setNavigationOnClickListener {
-            binding.drawerLayout.openDrawer(binding.navigationView)
-        }
-
+        binding.toolbar.setNavigationOnClickListener { binding.drawerLayout.openDrawer(binding.navigationView) }
         binding.navigationView.setNavigationItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> binding.mainScrollView.smoothScrollTo(0, 0)
@@ -225,22 +173,10 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNav.selectedItemId = R.id.bottom_home
         binding.bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.bottom_home -> {
-                    binding.mainScrollView.smoothScrollTo(0, 0)
-                    true
-                }
-                R.id.bottom_sync -> {
-                    startActivity(Intent(this, FolderSyncActivity::class.java))
-                    true
-                }
-                R.id.bottom_cloud -> {
-                    startActivity(Intent(this, CloudAccountsActivity::class.java))
-                    true
-                }
-                R.id.bottom_premium -> {
-                    startActivity(Intent(this, PremiumActivity::class.java))
-                    true
-                }
+                R.id.bottom_home -> { binding.mainScrollView.smoothScrollTo(0, 0); true }
+                R.id.bottom_sync -> { startActivity(Intent(this, FolderSyncActivity::class.java)); true }
+                R.id.bottom_cloud -> { startActivity(Intent(this, CloudAccountsActivity::class.java)); true }
+                R.id.bottom_premium -> { startActivity(Intent(this, PremiumActivity::class.java)); true }
                 else -> false
             }
         }
@@ -260,9 +196,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun gradient(colors: IntArray, radius: Float): GradientDrawable {
-        return GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors).apply {
-            cornerRadius = radius
-        }
+        return GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors).apply { cornerRadius = radius }
     }
 
     private fun solid(color: Int, radius: Float): GradientDrawable {
