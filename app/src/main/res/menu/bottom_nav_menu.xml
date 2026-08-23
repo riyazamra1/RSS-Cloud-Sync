@@ -4,4 +4,5 @@
     <item android:id="@+id/bottom_sync" android:icon="@android:drawable/ic_popup_sync" android:title="Sync" />
     <item android:id="@+id/bottom_cloud" android:icon="@android:drawable/ic_menu_upload" android:title="Cloud" />
     <item android:id="@+id/bottom_premium" android:icon="@android:drawable/btn_star_big_on" android:title="Premium" />
+    <item android:id="@+id/bottom_settings" android:icon="@android:drawable/ic_menu_preferences" android:title="Settings" />
 </menu>
