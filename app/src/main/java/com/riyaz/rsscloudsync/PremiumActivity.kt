@@ -67,25 +67,26 @@ class PremiumActivity : AppCompatActivity() {
         features.forEachIndexed { index, feature ->
             val row = TableRow(this).apply {
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(14), dp(7), dp(8), dp(7))
+                setPadding(dp(14), dp(7), dp(6), dp(7))
                 setBackgroundColor(if (index % 2 == 0) { if (dark) rowDarkA else rowLightA } else { if (dark) rowDarkB else rowLightB })
             }
 
             val name = TextView(this).apply {
                 text = "${feature.icon}  ${feature.name}"
-                textSize = 14.5f
+                textSize = 16f
                 setTextColor(primary)
                 gravity = Gravity.CENTER_VERTICAL
                 maxLines = 2
                 setTypeface(typeface, Typeface.BOLD)
-                setPadding(0, dp(3), dp(5), dp(3))
-                layoutParams = TableRow.LayoutParams(0, dp(58), 1f).apply {
+                includeFontPadding = false
+                setPadding(0, dp(4), dp(4), dp(4))
+                layoutParams = TableRow.LayoutParams(0, dp(62), 1f).apply {
                     gravity = Gravity.CENTER_VERTICAL
                 }
             }
             row.addView(name)
-            row.addView(statusCell(feature.free, freeAccent, secondary, 54))
-            row.addView(statusCell(feature.premium, premiumAccent, secondary, 64))
+            row.addView(statusCell(feature.free, freeAccent, secondary, 46))
+            row.addView(statusCell(feature.premium, premiumAccent, secondary, 52))
             table.addView(row)
 
             if (index != features.lastIndex) {
@@ -100,12 +101,12 @@ class PremiumActivity : AppCompatActivity() {
 
     private fun statusCell(enabled: Boolean, accent: Int, secondary: Int, widthDp: Int): TextView = TextView(this).apply {
         text = if (enabled) "✓" else "—"
-        textSize = if (enabled) 24f else 19f
+        textSize = if (enabled) 25f else 20f
         gravity = Gravity.CENTER
         includeFontPadding = false
         setTypeface(typeface, Typeface.BOLD)
         setTextColor(if (enabled) accent else secondary)
-        layoutParams = TableRow.LayoutParams(dp(widthDp), dp(58)).apply {
+        layoutParams = TableRow.LayoutParams(dp(widthDp), dp(62)).apply {
             gravity = Gravity.CENTER_VERTICAL
         }
     }
