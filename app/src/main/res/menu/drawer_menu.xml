@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:id="@+id/drawer_main" android:checkableBehavior="single">
+        <item android:id="@+id/nav_home" android:icon="@drawable/ic_drawer_home" android:title="Home" />
+        <item android:id="@+id/nav_folders" android:icon="@drawable/ic_drawer_folder" android:title="Sync folders" />
+        <item android:id="@+id/nav_automatic" android:icon="@drawable/ic_drawer_sync" android:title="Automatic sync" />
+        <item android:id="@+id/nav_cloud" android:icon="@drawable/ic_drawer_cloud" android:title="Cloud accounts" />
+        <item android:id="@+id/nav_external" android:icon="@drawable/ic_drawer_storage" android:title="External storage" />
+    </group>
+    <group android:id="@+id/drawer_support">
+        <item android:id="@+id/nav_upgrade" android:icon="@drawable/ic_drawer_premium" android:title="Upgrade to Premium" />
+        <item android:id="@+id/nav_about" android:icon="@drawable/ic_drawer_info" android:title="About RSS CLOUD SYNC" />
+        <item android:id="@+id/nav_contact" android:icon="@drawable/ic_drawer_contact" android:title="Contact" />
+    </group>
+</menu>
