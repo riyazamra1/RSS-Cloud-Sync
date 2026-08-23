@@ -3,16 +3,16 @@
     android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="?attr/colorSurface">
     <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="60dp" android:background="@android:color/transparent" app:titleTextColor="?attr/colorOnSurface" />
     <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:scrollbars="none">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="16dp" android:paddingEnd="16dp" android:paddingBottom="30dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="14dp" android:paddingEnd="14dp" android:paddingBottom="30dp">
             <TextView android:id="@+id/pageTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="FREE  vs  PREMIUM" android:textColor="?attr/colorOnSurface" android:textSize="28sp" android:textStyle="bold" />
             <TextView android:id="@+id/pageSubtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Compare every sync feature before you upgrade" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="12sp" />
 
             <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="26dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="68dp" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="10dp" android:background="@drawable/bg_main_hero">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="FEATURE" android:textColor="#D9E8FF" android:textSize="12sp" android:textStyle="bold" />
-                        <TextView android:layout_width="54dp" android:layout_height="wrap_content" android:gravity="center" android:text="FREE" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold" />
-                        <TextView android:layout_width="64dp" android:layout_height="wrap_content" android:gravity="center" android:text="PREMIUM ★" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="72dp" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="8dp" android:background="@drawable/bg_main_hero">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="FEATURE" android:textColor="#D9E8FF" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:layout_width="46dp" android:layout_height="wrap_content" android:gravity="center" android:text="FREE" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:layout_width="52dp" android:layout_height="wrap_content" android:gravity="center" android:text="PREMIUM ★" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
                     </LinearLayout>
                     <TableLayout android:id="@+id/comparisonTable" android:layout_width="match_parent" android:layout_height="wrap_content" />
                 </LinearLayout>
