@@ -1,13 +1,13 @@
 <resources>
-    <color name="splash_background">#070A12</color>
-    <color name="app_primary">#8B7CFF</color>
-    <color name="dark_background">#070A12</color>
-    <color name="dark_surface">#0D111B</color>
-    <color name="dark_card">#111725</color>
-    <color name="dark_text">#F7F8FC</color>
-    <color name="dark_secondary_text">#98A2B8</color>
-    <color name="dark_border">#242C3D</color>
-    <color name="dark_accent">#8B7CFF</color>
-    <color name="dark_accent_secondary">#4E8CFF</color>
-    <color name="dark_success">#39D98A</color>
+    <color name="splash_background">#070B14</color>
+    <color name="app_primary">#6EA8FF</color>
+    <color name="dark_background">#070B14</color>
+    <color name="dark_surface">#0D1421</color>
+    <color name="dark_card">#111B2B</color>
+    <color name="dark_text">#F8FAFF</color>
+    <color name="dark_secondary_text">#9BA9BE</color>
+    <color name="dark_border">#263650</color>
+    <color name="dark_accent">#6EA8FF</color>
+    <color name="dark_accent_secondary">#48D7FF</color>
+    <color name="dark_success">#43D6A2</color>
 </resources>
