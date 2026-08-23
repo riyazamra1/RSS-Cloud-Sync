@@ -51,26 +51,26 @@ class MainActivity : AppCompatActivity() {
     private fun applyAppearance() {
         val mode = prefs.getString("mode", "system") ?: "system"
         val dark = when (mode) { "dark" -> true; "light" -> false; else -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES }
-        val background = if (dark) Color.rgb(9, 12, 20) else Color.rgb(246, 247, 251)
-        val surface = if (dark) Color.rgb(20, 24, 35) else Color.WHITE
-        val outline = if (dark) Color.rgb(49, 57, 73) else Color.rgb(225, 227, 235)
-        val text = if (dark) Color.rgb(247, 248, 252) else Color.rgb(28, 30, 39)
-        val secondary = if (dark) Color.rgb(166, 173, 190) else Color.rgb(104, 107, 122)
+        val background = if (dark) Color.rgb(7, 11, 20) else Color.rgb(245, 247, 251)
+        val surface = if (dark) Color.rgb(15, 22, 36) else Color.WHITE
+        val outline = if (dark) Color.rgb(38, 51, 73) else Color.rgb(228, 231, 236)
+        val text = if (dark) Color.rgb(248, 250, 255) else Color.rgb(17, 24, 39)
+        val secondary = if (dark) Color.rgb(154, 167, 188) else Color.rgb(102, 112, 133)
         binding.root.setBackgroundColor(background); binding.mainScrollView.setBackgroundColor(background)
         binding.toolbar.setTitleTextColor(text); binding.cloudStorageSubtitle.setTextColor(text); binding.cloudSwipeHint.setTextColor(secondary); binding.syncStatusText.setTextColor(text); binding.syncSubtitle.setTextColor(secondary); binding.lastSyncText.setTextColor(secondary)
         applyTextTheme(binding.contentLayout, text, secondary)
         listOf(binding.syncStatusCard, binding.foldersCard, binding.syncSetupCard).forEach { styleCard(it, surface, outline) }
         for (i in 0 until binding.cloudProviderRow.childCount) (binding.cloudProviderRow.getChildAt(i) as? MaterialCardView)?.let { styleCard(it, surface, outline) }
-        binding.premiumBanner.background = gradient(if (dark) intArrayOf(Color.rgb(49, 29, 95), Color.rgb(89, 47, 145)) else intArrayOf(Color.rgb(81, 66, 183), Color.rgb(135, 77, 203)), 26f)
-        val selectedText = Color.WHITE; val unselectedText = if (dark) Color.rgb(215, 219, 231) else Color.rgb(60, 61, 72)
+        binding.premiumBanner.background = gradient(if (dark) intArrayOf(Color.rgb(17, 36, 67), Color.rgb(42, 78, 145)) else intArrayOf(Color.rgb(47, 91, 185), Color.rgb(74, 151, 218)), 26f)
+        val selectedText = Color.WHITE; val unselectedText = if (dark) Color.rgb(215, 224, 238) else Color.rgb(60, 68, 82)
         listOf(binding.lightButton, binding.systemButton, binding.darkButton).forEach { button ->
             val selected = when (mode) { "light" -> button == binding.lightButton; "dark" -> button == binding.darkButton; else -> button == binding.systemButton }
-            button.background = if (selected) gradient(intArrayOf(Color.rgb(88, 72, 198), Color.rgb(166, 81, 207)), 50f) else solid(Color.TRANSPARENT, 50f)
+            button.background = if (selected) gradient(intArrayOf(Color.rgb(50, 105, 218), Color.rgb(54, 194, 235)), 50f) else solid(Color.TRANSPARENT, 50f)
             button.setTextColor(if (selected) selectedText else unselectedText)
         }
         binding.bottomNav.setBackgroundColor(surface)
-        binding.bottomNav.elevation = dp(10f)
-        binding.bottomNav.translationZ = dp(2f)
+        binding.bottomNav.elevation = dp(12f)
+        binding.bottomNav.translationZ = dp(3f)
     }
 
     private fun applyTextTheme(parent: ViewGroup, primary: Int, secondary: Int) {
@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun styleCard(card: MaterialCardView, surface: Int, outline: Int) { card.setCardBackgroundColor(surface); card.strokeColor = outline; card.strokeWidth = dpInt(1f); card.cardElevation = 0f; card.radius = dp(22f) }
     private fun setupGradientButtons() { applyGradient(binding.syncNowButton); applyGradient(binding.googleDriveConnectButton); applyGradient(binding.oneDriveConnectButton); applyGradient(binding.dropboxConnectButton) }
-    private fun applyGradient(button: MaterialButton) { button.background = gradient(intArrayOf(Color.rgb(88, 72, 198), Color.rgb(166, 81, 207)), 60f); button.setTextColor(Color.WHITE) }
+    private fun applyGradient(button: MaterialButton) { button.background = gradient(intArrayOf(Color.rgb(50, 105, 218), Color.rgb(54, 194, 235)), 60f); button.setTextColor(Color.WHITE) }
 
     private fun setupCloudCards() {
         val providers = arrayOf("Google Drive", "OneDrive", "Dropbox", "MEGA", "Box", "WebDAV")
