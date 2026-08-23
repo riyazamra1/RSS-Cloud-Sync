@@ -8,7 +8,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
@@ -32,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, true)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setupAppearanceButtons(); setupGradientButtons(); setupNavigation(); setupCloudCards(); setupDrawer(); setupBottomNavigation(); setupBannerSlider(); applyAppearance()
+        setupAppearanceButtons(); setupGradientButtons(); setupNavigation(); setupCloudCards(); setupDrawer(); setupBottomNavigation(); setupBannerSlider(); applyAppearance(); animateInterface()
         binding.gradientProgress.setProgress(72f, false)
     }
 
@@ -56,6 +58,7 @@ class MainActivity : AppCompatActivity() {
         val secondary = if (dark) Color.rgb(166, 173, 190) else Color.rgb(104, 107, 122)
         binding.root.setBackgroundColor(background); binding.mainScrollView.setBackgroundColor(background)
         binding.toolbar.setTitleTextColor(text); binding.cloudStorageSubtitle.setTextColor(text); binding.cloudSwipeHint.setTextColor(secondary); binding.syncStatusText.setTextColor(text); binding.syncSubtitle.setTextColor(secondary); binding.lastSyncText.setTextColor(secondary)
+        applyTextTheme(binding.contentLayout, text, secondary)
         listOf(binding.syncStatusCard, binding.foldersCard, binding.syncSetupCard).forEach { styleCard(it, surface, outline) }
         for (i in 0 until binding.cloudProviderRow.childCount) (binding.cloudProviderRow.getChildAt(i) as? MaterialCardView)?.let { styleCard(it, surface, outline) }
         binding.premiumBanner.background = gradient(if (dark) intArrayOf(Color.rgb(49, 29, 95), Color.rgb(89, 47, 145)) else intArrayOf(Color.rgb(81, 66, 183), Color.rgb(135, 77, 203)), 26f)
@@ -65,7 +68,21 @@ class MainActivity : AppCompatActivity() {
             button.background = if (selected) gradient(intArrayOf(Color.rgb(88, 72, 198), Color.rgb(166, 81, 207)), 50f) else solid(Color.TRANSPARENT, 50f)
             button.setTextColor(if (selected) selectedText else unselectedText)
         }
-        binding.bottomNav.setBackgroundColor(surface); binding.bottomNav.elevation = dp(5f)
+        binding.bottomNav.setBackgroundColor(surface)
+        binding.bottomNav.elevation = dp(10f)
+        binding.bottomNav.translationZ = dp(2f)
+    }
+
+    private fun applyTextTheme(parent: ViewGroup, primary: Int, secondary: Int) {
+        for (i in 0 until parent.childCount) {
+            val child = parent.getChildAt(i)
+            if (child === binding.premiumBanner) continue
+            when (child) {
+                is MaterialButton -> Unit
+                is TextView -> if (child !== binding.lightButton && child !== binding.systemButton && child !== binding.darkButton) child.setTextColor(if (child.textSize <= 12f * resources.displayMetrics.scaledDensity) secondary else primary)
+                is ViewGroup -> applyTextTheme(child, primary, secondary)
+            }
+        }
     }
 
     private fun styleCard(card: MaterialCardView, surface: Int, outline: Int) { card.setCardBackgroundColor(surface); card.strokeColor = outline; card.strokeWidth = dpInt(1f); card.cardElevation = 0f; card.radius = dp(22f) }
@@ -92,14 +109,31 @@ class MainActivity : AppCompatActivity() {
     }
     private fun setupBottomNavigation() {
         binding.bottomNav.selectedItemId = R.id.bottom_home
-        binding.bottomNav.setOnItemSelectedListener { item -> when (item.itemId) { R.id.bottom_home -> { binding.mainScrollView.smoothScrollTo(0, 0); true }; R.id.bottom_sync -> { startActivity(Intent(this, FolderSyncActivity::class.java)); true }; R.id.bottom_cloud -> { startActivity(Intent(this, CloudAccountsActivity::class.java)); true }; R.id.bottom_premium -> { startActivity(Intent(this, PremiumActivity::class.java)); true }; else -> false } }
+        binding.bottomNav.setOnItemSelectedListener { item -> when (item.itemId) {
+            R.id.bottom_home -> { binding.mainScrollView.smoothScrollTo(0, 0); true }
+            R.id.bottom_sync -> { startActivity(Intent(this, FolderSyncActivity::class.java)); true }
+            R.id.bottom_cloud -> { startActivity(Intent(this, CloudAccountsActivity::class.java)); true }
+            R.id.bottom_premium -> { startActivity(Intent(this, PremiumActivity::class.java)); true }
+            R.id.bottom_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
+            else -> false
+        } }
     }
     private fun setupBannerSlider() {
         binding.bannerTitle.text = bannerTitles[0]; binding.bannerSubtitle.text = bannerSubtitles[0]
         binding.premiumBanner.setOnClickListener { if (bannerPage == 1) startActivity(Intent(this, PremiumActivity::class.java)) }
         binding.premiumBanner.setOnTouchListener { _, event -> when (event.actionMasked) { MotionEvent.ACTION_DOWN -> { bannerDownX = event.x; false }; MotionEvent.ACTION_UP -> { val distance = event.x - bannerDownX; if (kotlin.math.abs(distance) > dp(45f)) { bannerPage = if (distance < 0) (bannerPage + 1) % bannerTitles.size else (bannerPage - 1 + bannerTitles.size) % bannerTitles.size; updateBanner(); true } else false }; else -> false } }
     }
-    private fun updateBanner() { binding.bannerTitle.text = bannerTitles[bannerPage]; binding.bannerSubtitle.text = bannerSubtitles[bannerPage]; binding.bannerLogo.alpha = 1f }
+    private fun updateBanner() { binding.bannerTitle.text = bannerTitles[bannerPage]; binding.bannerSubtitle.text = bannerSubtitles[bannerPage]; binding.bannerLogo.alpha = 1f; binding.bannerTitle.animate().alpha(0f).setDuration(90).withEndAction { binding.bannerTitle.animate().alpha(1f).setDuration(180).start() }.start() }
+    private fun animateInterface() {
+        binding.contentLayout.alpha = 0f
+        binding.contentLayout.translationY = dp(8f)
+        binding.contentLayout.animate().alpha(1f).translationY(0f).setDuration(320).start()
+        for (i in 0 until binding.cloudProviderRow.childCount) {
+            val child = binding.cloudProviderRow.getChildAt(i)
+            child.alpha = 0f; child.translationY = dp(8f)
+            child.animate().alpha(1f).translationY(0f).setStartDelay((i * 45L)).setDuration(240).start()
+        }
+    }
     private fun openAutomaticSync() { if (appPrefs.getBoolean("premium_unlocked", false)) startActivity(Intent(this, SyncSetupActivity::class.java)) else startActivity(Intent(this, PremiumActivity::class.java)) }
     private fun openCloud(provider: String) { appPrefs.edit().putString("selected_cloud_provider", provider).apply(); startActivity(Intent(this, CloudAccountsActivity::class.java)) }
     private fun gradient(colors: IntArray, radius: Float): GradientDrawable = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors).apply { cornerRadius = radius }
