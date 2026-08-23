@@ -9,86 +9,56 @@ import androidx.appcompat.app.AppCompatActivity
 import com.riyaz.rsscloudsync.databinding.ActivityFeatureListBinding
 
 class PremiumActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityFeatureListBinding
+
+    private val freeFeatures = listOf(
+        "Two-way Sync", "Manual sync", "1 synced folder pair", "Google Drive", "Basic sync history", "Light / Dark / System", "Ads"
+    )
+
+    private val premiumFeatures = listOf(
+        "Everything in Free", "Multiple folder pairs", "Upload only", "Upload mirror", "Upload then delete", "Download only", "Download mirror", "Download then delete", "Automatic sync", "Instant upload", "Advanced scheduling", "Advanced file filtering", "Priority sync", "Extended sync history", "No ads"
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityFeatureListBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Premium"
-
         binding.pageTitle.text = "FREE vs PREMIUM"
-        binding.pageSubtitle.text = "1 user • 1 device"
-        buildComparisonTable()
+        binding.pageSubtitle.text = "Compare plans • 1 user • 1 device"
+        buildTable(binding.freeFeatureTable, "FREE", freeFeatures)
+        buildTable(binding.premiumFeatureTable, "PREMIUM", premiumFeatures)
     }
 
-    private fun buildComparisonTable() {
-        val rows = listOf(
-            "Two-way Sync" to Pair(true, true),
-            "Manual Sync" to Pair(true, true),
-            "Upload only" to Pair(false, true),
-            "Upload mirror" to Pair(false, true),
-            "Upload then delete" to Pair(false, true),
-            "Download only" to Pair(false, true),
-            "Download mirror" to Pair(false, true),
-            "Download then delete" to Pair(false, true),
-            "Multiple folder pairs" to Pair(false, true),
-            "Automatic sync" to Pair(false, true),
-            "Advanced scheduling" to Pair(false, true),
-            "Advanced file filtering" to Pair(false, true),
-            "Priority sync" to Pair(false, true),
-            "Extended sync history" to Pair(false, true),
-            "No ads" to Pair(false, true)
-        )
-
-        binding.featureTable.removeAllViews()
-        addHeaderRow()
-        rows.forEachIndexed { index, (feature, access) ->
-            addFeatureRow(feature, access.first, access.second, index % 2 == 0)
+    private fun buildTable(table: android.widget.TableLayout, heading: String, features: List<String>) {
+        table.removeAllViews()
+        val header = TableRow(this).apply { setPadding(dp(14), dp(12), dp(14), dp(12)) }
+        header.addView(cell("FEATURE", 1f, true, Gravity.START, false))
+        header.addView(cell(heading, 0.42f, true, Gravity.CENTER, false))
+        table.addView(header)
+        features.forEachIndexed { index, feature ->
+            val row = TableRow(this).apply {
+                setPadding(dp(14), dp(9), dp(14), dp(9))
+                if (index % 2 == 0) setBackgroundColor(Color.argb(14, 100, 90, 180))
+            }
+            row.addView(cell(feature, 1f, false, Gravity.START, false))
+            row.addView(cell("✓", 0.42f, true, Gravity.CENTER, true))
+            table.addView(row)
         }
     }
 
-    private fun addHeaderRow() {
-        val row = TableRow(this).apply {
-            setPadding(dp(14), dp(12), dp(14), dp(12))
-        }
-        row.addView(cell("FEATURE", 1.7f, true, Gravity.START))
-        row.addView(cell("FREE", 0.8f, true, Gravity.CENTER))
-        row.addView(cell("PREMIUM", 1.0f, true, Gravity.CENTER))
-        binding.featureTable.addView(row)
-    }
-
-    private fun addFeatureRow(feature: String, free: Boolean, premium: Boolean, alternate: Boolean) {
-        val row = TableRow(this).apply {
-            setPadding(dp(14), dp(10), dp(14), dp(10))
-            setBackgroundColor(if (alternate) Color.argb(18, 100, 90, 180) else Color.TRANSPARENT)
-        }
-        row.addView(cell(feature, 1.7f, false, Gravity.START))
-        row.addView(cell(if (free) "✓" else "—", 0.8f, true, Gravity.CENTER))
-        row.addView(cell(if (premium) "✓" else "—", 1.0f, true, Gravity.CENTER))
-        binding.featureTable.addView(row)
-    }
-
-    private fun cell(text: String, weight: Float, bold: Boolean, gravity: Int): TextView {
-        return TextView(this).apply {
-            this.text = text
-            this.gravity = gravity or Gravity.CENTER_VERTICAL
-            textSize = if (bold) 12f else 11.5f
-            setTextColor(if (text == "✓") Color.rgb(43, 166, 116) else Color.rgb(95, 98, 112))
-            if (bold && text != "✓") setTextColor(Color.rgb(55, 52, 90))
-            if (bold) setTypeface(typeface, android.graphics.Typeface.BOLD)
-            layoutParams = TableRow.LayoutParams(0, dp(42), weight)
-        }
+    private fun cell(text: String, weight: Float, bold: Boolean, gravity: Int, check: Boolean): TextView = TextView(this).apply {
+        this.text = text
+        this.gravity = gravity or Gravity.CENTER_VERTICAL
+        textSize = if (bold) 11.5f else 11f
+        setTextColor(if (check) Color.rgb(45, 166, 118) else if (bold) Color.rgb(80, 74, 145) else Color.rgb(100, 103, 116))
+        if (bold) setTypeface(typeface, android.graphics.Typeface.BOLD)
+        layoutParams = TableRow.LayoutParams(0, dp(40), weight)
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
-    override fun onSupportNavigateUp(): Boolean {
-        finish()
-        return true
-    }
+    override fun onSupportNavigateUp(): Boolean { finish(); return true }
 }
