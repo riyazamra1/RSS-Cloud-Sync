@@ -9,12 +9,12 @@
 
             <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="26dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="64dp" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp" android:background="@drawable/bg_main_hero">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="FEATURE" android:textColor="#D9E8FF" android:textSize="10sp" android:textStyle="bold" />
-                        <TextView android:layout_width="62dp" android:layout_height="wrap_content" android:gravity="center" android:text="FREE" android:textColor="#FFFFFF" android:textSize="10sp" android:textStyle="bold" />
-                        <TextView android:layout_width="78dp" android:layout_height="wrap_content" android:gravity="center" android:text="PREMIUM  ★" android:textColor="#FFFFFF" android:textSize="10sp" android:textStyle="bold" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="68dp" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="10dp" android:background="@drawable/bg_main_hero">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="FEATURE" android:textColor="#D9E8FF" android:textSize="12sp" android:textStyle="bold" />
+                        <TextView android:layout_width="54dp" android:layout_height="wrap_content" android:gravity="center" android:text="FREE" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold" />
+                        <TextView android:layout_width="64dp" android:layout_height="wrap_content" android:gravity="center" android:text="PREMIUM ★" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold" />
                     </LinearLayout>
-                    <TableLayout android:id="@+id/comparisonTable" android:layout_width="match_parent" android:layout_height="wrap_content" android:stretchColumns="*" />
+                    <TableLayout android:id="@+id/comparisonTable" android:layout_width="match_parent" android:layout_height="wrap_content" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
