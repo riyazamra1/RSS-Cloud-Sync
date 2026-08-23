@@ -1,37 +1,41 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="174dp"
-    android:orientation="vertical"
+    android:layout_height="148dp"
+    android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingStart="20dp"
-    android:paddingEnd="20dp"
-    android:paddingTop="16dp"
-    android:paddingBottom="16dp"
+    android:paddingStart="18dp"
+    android:paddingEnd="18dp"
     android:background="@drawable/bg_drawer_header">
 
     <ImageView
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="68dp"
+        android:layout_height="68dp"
         android:src="@drawable/rss_cloud_sync_logo"
         android:scaleType="fitCenter"
         android:contentDescription="RSS CLOUD SYNC" />
 
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="RSS CLOUD SYNC"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:letterSpacing="0.02"
-        android:textStyle="bold" />
+        android:layout_marginStart="14dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="One place for all your clouds"
-        android:textColor="#E7E2FF"
-        android:textSize="11sp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RSS CLOUD SYNC"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp"
+            android:letterSpacing="0.03"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="All your clouds. One secure space."
+            android:textColor="#AEB7CB"
+            android:textSize="10sp" />
+    </LinearLayout>
 </LinearLayout>
