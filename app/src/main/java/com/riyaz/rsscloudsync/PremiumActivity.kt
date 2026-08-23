@@ -2,9 +2,10 @@ package com.riyaz.rsscloudsync
 
 import android.content.res.Configuration
 import android.graphics.Color
-import android.os.Bundle
 import android.graphics.Typeface
+import android.os.Bundle
 import android.view.Gravity
+import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -13,19 +14,30 @@ import com.riyaz.rsscloudsync.databinding.ActivityFeatureListBinding
 class PremiumActivity : AppCompatActivity() {
     private lateinit var binding: ActivityFeatureListBinding
 
-    private data class Feature(val icon: String, val name: String)
+    private data class Feature(val icon: String, val name: String, val free: Boolean, val premium: Boolean)
 
-    private val freeFeatures = listOf(
-        Feature("↔", "Two-way Sync"), Feature("▶", "Manual sync"), Feature("▣", "1 synced folder pair"),
-        Feature("☁", "Google Drive"), Feature("◷", "Basic sync history"), Feature("◐", "Light / Dark / System"), Feature("A", "Ads")
-    )
-
-    private val premiumFeatures = listOf(
-        Feature("✓", "Everything in Free"), Feature("▣", "Multiple folder pairs"), Feature("↑", "Upload only"),
-        Feature("↥", "Upload mirror"), Feature("⌫", "Upload then delete"), Feature("↓", "Download only"),
-        Feature("↧", "Download mirror"), Feature("⌫", "Download then delete"), Feature("⟳", "Automatic sync"),
-        Feature("⚡", "Instant upload"), Feature("◷", "Advanced scheduling"), Feature("≡", "Advanced file filtering"),
-        Feature("★", "Priority sync"), Feature("☷", "Extended sync history"), Feature("✓", "No ads")
+    private val features = listOf(
+        Feature("↔", "Two-way Sync", true, true),
+        Feature("▶", "Manual sync", true, true),
+        Feature("▣", "1 synced folder pair", true, true),
+        Feature("☁", "Google Drive", true, true),
+        Feature("◷", "Basic sync history", true, true),
+        Feature("◐", "Light / Dark / System", true, true),
+        Feature("↑", "Upload only", false, true),
+        Feature("↥", "Upload mirror", false, true),
+        Feature("⌫", "Upload then delete", false, true),
+        Feature("↓", "Download only", false, true),
+        Feature("↧", "Download mirror", false, true),
+        Feature("⌫", "Download then delete", false, true),
+        Feature("⟳", "Automatic sync", false, true),
+        Feature("⚡", "Instant upload", false, true),
+        Feature("◷", "Advanced scheduling", false, true),
+        Feature("≡", "Advanced file filtering", false, true),
+        Feature("★", "Priority sync", false, true),
+        Feature("☷", "Extended sync history", false, true),
+        Feature("▤", "Multiple folder pairs", false, true),
+        Feature("✓", "No ads", false, true),
+        Feature("A", "Ads", true, false)
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,54 +46,61 @@ class PremiumActivity : AppCompatActivity() {
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Compare plans"
-        binding.pageTitle.text = "FREE  vs  PREMIUM"
-        binding.pageSubtitle.text = "Everything you need to choose the right sync plan"
-        buildTable(binding.freeFeatureTable, "FREE", freeFeatures)
-        buildTable(binding.premiumFeatureTable, "PREMIUM", premiumFeatures)
-        applyThemeText()
+        supportActionBar?.title = "Plans"
+        applyTheme()
+        buildComparison(binding.comparisonTable)
     }
 
-    private fun buildTable(table: android.widget.TableLayout, heading: String, features: List<Feature>) {
+    private fun buildComparison(table: TableLayout) {
         table.removeAllViews()
         val dark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        val primary = if (dark) Color.rgb(247,248,252) else Color.rgb(35,36,45)
-        val secondary = if (dark) Color.rgb(174,181,198) else Color.rgb(103,106,120)
-        val accent = if (heading == "PREMIUM") Color.rgb(156,94,221) else Color.rgb(91,79,190)
-        val header = TableRow(this).apply {
-            setPadding(dp(14), dp(11), dp(14), dp(11))
-            setBackgroundColor(if (dark) Color.rgb(29,34,47) else Color.rgb(246,245,252))
-        }
-        header.addView(cell("FEATURE", 1f, true, Gravity.START, primary, accent, ""))
-        header.addView(cell(heading, 0.36f, true, Gravity.CENTER, primary, accent, ""))
-        table.addView(header)
+        val primary = if (dark) Color.rgb(244, 247, 252) else Color.rgb(25, 32, 44)
+        val secondary = if (dark) Color.rgb(150, 165, 187) else Color.rgb(100, 112, 130)
+        val divider = if (dark) Color.rgb(34, 48, 69) else Color.rgb(229, 234, 241)
+        val freeAccent = Color.rgb(110, 168, 255)
+        val premiumAccent = Color.rgb(72, 215, 255)
+
         features.forEachIndexed { index, feature ->
             val row = TableRow(this).apply {
-                setPadding(dp(12), dp(6), dp(12), dp(6))
-                if (index % 2 == 0) setBackgroundColor(if (dark) Color.rgb(24,29,40) else Color.rgb(250,250,253))
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(14), dp(5), dp(10), dp(5))
+                setBackgroundColor(if (index % 2 == 0) (if (dark) Color.rgb(17, 27, 43) else Color.rgb(250, 252, 255)) else (if (dark) Color.rgb(13, 20, 33) else Color.WHITE))
             }
-            row.addView(cell(feature.name, 1f, false, Gravity.START, primary, accent, feature.icon))
-            row.addView(cell("✓", 0.36f, true, Gravity.CENTER, primary, Color.rgb(49,184,128), ""))
+            val name = TextView(this).apply {
+                text = "${feature.icon}  ${feature.name}"
+                textSize = 10.5f
+                setTextColor(primary)
+                gravity = Gravity.CENTER_VERTICAL
+                maxLines = 2
+                setPadding(0, dp(2), dp(4), dp(2))
+                layoutParams = TableRow.LayoutParams(0, dp(46), 1f)
+            }
+            row.addView(name)
+            row.addView(statusCell(feature.free, freeAccent, secondary))
+            row.addView(statusCell(feature.premium, premiumAccent, secondary))
             table.addView(row)
+            if (index != features.lastIndex) {
+                val line = TextView(this).apply { setBackgroundColor(divider); layoutParams = TableLayout.LayoutParams(-1, dp(1)) }
+                table.addView(line)
+            }
         }
     }
 
-    private fun cell(text: String, weight: Float, bold: Boolean, gravity: Int, primary: Int, accent: Int, icon: String): TextView = TextView(this).apply {
-        this.text = if (icon.isEmpty()) text else "$icon  $text"
-        this.gravity = gravity or Gravity.CENTER_VERTICAL
-        textSize = if (bold) 11.5f else 11f
-        setTextColor(if (bold) accent else primary)
-        if (bold) setTypeface(typeface, Typeface.BOLD)
-        setPadding(dp(2), 0, dp(2), 0)
-        layoutParams = TableRow.LayoutParams(0, dp(42), weight)
+    private fun statusCell(enabled: Boolean, accent: Int, secondary: Int): TextView = TextView(this).apply {
+        text = if (enabled) "✓" else "—"
+        textSize = if (enabled) 16f else 14f
+        gravity = Gravity.CENTER
+        setTypeface(typeface, Typeface.BOLD)
+        setTextColor(if (enabled) accent else secondary)
+        layoutParams = TableRow.LayoutParams(dp(58), dp(46))
     }
 
-    private fun applyThemeText() {
+    private fun applyTheme() {
         val dark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        binding.root.setBackgroundColor(if (dark) Color.rgb(9,12,20) else Color.rgb(246,247,251))
-        binding.pageTitle.setTextColor(if (dark) Color.WHITE else Color.rgb(28,30,39))
-        binding.pageSubtitle.setTextColor(if (dark) Color.rgb(174,181,198) else Color.rgb(104,107,122))
-        binding.toolbar.setTitleTextColor(if (dark) Color.WHITE else Color.rgb(28,30,39))
+        binding.root.setBackgroundColor(if (dark) Color.rgb(7, 11, 20) else Color.rgb(244, 247, 251))
+        binding.pageTitle.setTextColor(if (dark) Color.WHITE else Color.rgb(17, 24, 39))
+        binding.pageSubtitle.setTextColor(if (dark) Color.rgb(155, 169, 190) else Color.rgb(102, 112, 133))
+        binding.toolbar.setTitleTextColor(if (dark) Color.WHITE else Color.rgb(17, 24, 39))
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
