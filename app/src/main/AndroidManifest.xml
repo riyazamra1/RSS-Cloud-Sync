@@ -15,5 +15,6 @@
         <activity android:name=".FreeFeaturesActivity" android:exported="false" />
         <activity android:name=".PremiumActivity" android:exported="false" />
         <activity android:name=".CloudAccountsActivity" android:exported="false" />
+        <activity android:name=".SettingsActivity" android:exported="false" />
     </application>
 </manifest>
