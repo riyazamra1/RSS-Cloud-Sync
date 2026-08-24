@@ -8,14 +8,13 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.ViewGroup
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.button.MaterialButton
 
 class RssUiApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
-            override fun onActivityPostCreated(activity: Activity, state: Bundle?) {
-                if (activity is MainActivity) activity.window.decorView.post { polishDashboard(activity) }
-            }
+            override fun onActivityPostCreated(activity: Activity, state: Bundle?) { if (activity is MainActivity) activity.window.decorView.post { polishDashboard(activity) } }
             override fun onActivityCreated(a: Activity, s: Bundle?) = Unit
             override fun onActivityStarted(a: Activity) = Unit
             override fun onActivityResumed(a: Activity) = Unit
@@ -31,38 +30,35 @@ class RssUiApplication : Application() {
         val density = activity.resources.displayMetrics.density
         fun dp(v: Int) = (v * density).toInt()
         val light = (activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES
-        val surfaceContainer = if (light) Color.rgb(249, 251, 255) else Color.rgb(15, 22, 36)
+        val surface = if (light) Color.rgb(249, 251, 255) else Color.rgb(15, 22, 36)
         val outline = if (light) Color.rgb(225, 230, 238) else Color.rgb(38, 51, 73)
-        val appearance = root.findViewById<ViewGroup>(activity.resources.getIdentifier("appearanceCard", "id", activity.packageName))
-        appearance?.setBackgroundColor(Color.TRANSPARENT)
-        appearance?.background = GradientDrawable().apply { cornerRadius = dp(18).toFloat(); setColor(surfaceContainer); setStroke(dp(1), outline) }
-        appearance?.layoutParams?.let { it.height = dp(42); appearance.layoutParams = it }
 
-        root.findViewById<MaterialCardView>(activity.resources.getIdentifier("premiumBanner", "id", activity.packageName))?.layoutParams?.let {
-            it.height = dp(128); it as ViewGroup.LayoutParams; root.findViewById<MaterialCardView>(activity.resources.getIdentifier("premiumBanner", "id", activity.packageName)).layoutParams = it
+        root.findViewById<ViewGroup>(activity.resources.getIdentifier("appearanceCard", "id", activity.packageName))?.let { v ->
+            v.background = GradientDrawable().apply { cornerRadius = dp(16).toFloat(); setColor(surface); setStroke(dp(1), outline) }
+            v.layoutParams = v.layoutParams.apply { height = dp(42) }
         }
-        root.findViewById<MaterialCardView>(activity.resources.getIdentifier("syncStatusCard", "id", activity.packageName))?.layoutParams?.let {
-            it.height = dp(122); root.findViewById<MaterialCardView>(activity.resources.getIdentifier("syncStatusCard", "id", activity.packageName)).layoutParams = it
-        }
-        root.findViewById<MaterialCardView>(activity.resources.getIdentifier("foldersCard", "id", activity.packageName))?.layoutParams?.let {
-            it.height = dp(104); root.findViewById<MaterialCardView>(activity.resources.getIdentifier("foldersCard", "id", activity.packageName)).layoutParams = it
-        }
-        root.findViewById<MaterialCardView>(activity.resources.getIdentifier("syncSetupCard", "id", activity.packageName))?.layoutParams?.let {
-            it.height = dp(104); root.findViewById<MaterialCardView>(activity.resources.getIdentifier("syncSetupCard", "id", activity.packageName)).layoutParams = it
-        }
-        root.findViewById<ViewGroup>(activity.resources.getIdentifier("cloudAccountsScroll", "id", activity.packageName))?.layoutParams?.let {
-            it.height = dp(126); root.findViewById<ViewGroup>(activity.resources.getIdentifier("cloudAccountsScroll", "id", activity.packageName)).layoutParams = it
-        }
+        setHeight<MaterialCardView>(root, activity, "premiumBanner", 118)
+        setHeight<MaterialCardView>(root, activity, "syncStatusCard", 112)
+        setHeight<MaterialCardView>(root, activity, "foldersCard", 96)
+        setHeight<MaterialCardView>(root, activity, "syncSetupCard", 96)
+        setHeight<ViewGroup>(root, activity, "cloudAccountsScroll", 122)
+
         root.findViewById<ViewGroup>(activity.resources.getIdentifier("cloudProviderRow", "id", activity.packageName))?.let { row ->
             for (i in 0 until row.childCount) {
-                val child = row.getChildAt(i)
-                child.layoutParams = child.layoutParams.apply { width = dp(148); height = dp(118) }
-                child.requestLayout()
+                row.getChildAt(i).layoutParams = row.getChildAt(i).layoutParams.apply { width = dp(158); height = dp(114) }
+                row.getChildAt(i).requestLayout()
             }
         }
-        root.findViewById<com.google.android.material.button.MaterialButton>(activity.resources.getIdentifier("syncNowButton", "id", activity.packageName))?.let {
-            it.layoutParams = it.layoutParams.apply { width = dp(160); height = dp(42) }
+        root.findViewById<MaterialButton>(activity.resources.getIdentifier("syncNowButton", "id", activity.packageName))?.let {
+            it.layoutParams = it.layoutParams.apply { width = dp(170); height = dp(44) }
             it.requestLayout()
+        }
+    }
+
+    private inline fun <reified T : ViewGroup> setHeight(root: android.view.View, activity: Activity, idName: String, heightDp: Int) {
+        root.findViewById<T>(activity.resources.getIdentifier(idName, "id", activity.packageName))?.let { view ->
+            view.layoutParams = view.layoutParams.apply { height = (heightDp * activity.resources.displayMetrics.density).toInt() }
+            view.requestLayout()
         }
     }
 }
