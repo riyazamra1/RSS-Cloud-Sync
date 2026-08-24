@@ -12,6 +12,7 @@
         <activity android:name=".FolderSyncActivity" android:exported="false" />
         <activity android:name=".AboutActivity" android:exported="false" />
         <activity android:name=".ContactActivity" android:exported="false" />
+        <activity android:name=".TermsActivity" android:exported="false" />
         <activity android:name=".FreeFeaturesActivity" android:exported="false" />
         <activity android:name=".PremiumActivity" android:exported="false" />
         <activity android:name=".CloudAccountsActivity" android:exported="false" />
