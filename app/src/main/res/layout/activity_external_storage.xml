@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="?attr/colorSurface">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="58dp"
+        android:background="@android:color/transparent" android:elevation="0dp"
+        app:title="External storage" app:titleTextColor="?attr/colorOnSurface" />
+
+    <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true" android:scrollbars="none">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="External storage" android:textColor="?attr/colorOnSurface" android:textSize="28sp" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Choose a local or removable-storage folder for RSS CLOUD SYNC." android:textColor="?attr/colorOnSurfaceVariant" android:textSize="13sp" />
+
+            <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="24dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Selected folder" android:textColor="?attr/colorOnSurface" android:textSize="16sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/selectedExternalText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="9dp" android:text="No external folder selected" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="12sp" android:maxLines="3" android:ellipsize="middle" />
+                    <TextView android:id="@+id/externalStatusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Choose a folder to make it available for sync." android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/chooseExternalButton" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="16dp" android:text="CHOOSE FOLDER" android:textSize="11sp" app:cornerRadius="24dp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/clearExternalButton" android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="8dp" android:text="CLEAR SELECTION" android:textSize="10sp" style="@style/Widget.Material3.Button.TextButton" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Access note" android:textColor="?attr/colorOnSurface" android:textSize="14sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Android asks you to grant folder access through the system picker. RSS CLOUD SYNC stores only the folder permission needed to access your selected location." android:textColor="?attr/colorOnSurfaceVariant" android:textSize="12sp" android:lineSpacingExtra="3dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
