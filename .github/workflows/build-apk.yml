@@ -43,3 +43,4 @@ jobs:
           retention-days: 14
 
       # Remote APK build requested from ChatGPT
+      # Build trigger refreshed: 2026-08-24
