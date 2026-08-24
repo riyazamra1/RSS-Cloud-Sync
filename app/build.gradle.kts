@@ -17,9 +17,7 @@ val hasValidSigningProps = keystorePropsFile.exists().also { exists ->
 android {
     namespace = "com.riyaz.rsscloudsync"
     compileSdk = 36
-    buildFeatures {
-        buildConfig = true
-    }
+    buildFeatures { buildConfig = true }
     lint { checkReleaseBuilds = false }
     signingConfigs {
         if (hasValidSigningProps) {
@@ -35,8 +33,8 @@ android {
         applicationId = "com.riyaz.rsscloudsync"
         minSdk = 21
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.2"
+        versionCode = 3
+        versionName = "1.3"
         vectorDrawables { useSupportLibrary = true }
     }
     compileOptions {
