@@ -33,8 +33,8 @@ android {
         applicationId = "com.riyaz.rsscloudsync"
         minSdk = 21
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.5"
+        versionCode = 6
+        versionName = "1.6"
         vectorDrawables { useSupportLibrary = true }
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
@@ -47,7 +47,7 @@ android {
     }
     buildFeatures { viewBinding = true }
     composeOptions { kotlinCompilerExtensionVersion = "1.5.10" }
-    packaging { resources { resources.excludes.add("/META-INF/{AL2.0,LGPL2.1}"); resources.excludes.add("META-INF/kotlinx_coroutines_core.version"); resources.pickFirsts.add("nonJvmMain/default/linkdata/package_androidx/0_androidx.knm"); resources.pickFirsts.add("nonJvmMain/default/linkdata/root_package/0_.knm"); resources.pickFirsts.add("nonJvmMain/default/linkdata/module"); resources.pickFirsts.add("nativeMain/default/linkdata/root_package/0_.knm"); resources.pickFirsts.add("nativeMain/default/linkdata/module"); resources.pickFirsts.add("commonMain/default/linkdata/root_package/0_.knm"); resources.pickFirsts.add("commonMain/default/linkdata/module"); resources.pickFirsts.add("commonMain/default/linkdata/package_androidx/0_androidx.knm"); resources.pickFirsts.add("META-INF/kotlin-project-structure-metadata.json"); resources.merges.add("commonMain/default/manifest"); resources.merges.add("nonJvmMain/default/manifest"); resources.merges.add("nativeMain/default/manifest") } }
+    packaging { resources { resources.excludes.add("/META-INF/{AL2.0,LGPL2.1}"); resources.excludes.add("META-INF/kotlinx_coroutines_core.version"); resources.pickFirsts.add("nonJvmMain/default/linkdata/package_androidx/0_androidx.knm"); resources.pickFirsts.add("nonJvmMain/default/linkdata/root_package/0_.knm"); resources.pickFirsts.add("nonJvmMain/default/linkdata/module"); resources.pickFirsts.add("nativeMain/default/linkdata/root_package/0_.knm"); resources.pickFirsts.add("nativeMain/default/linkdata/package_androidx/0_androidx.knm"); resources.pickFirsts.add("commonMain/default/linkdata/root_package/0_.knm"); resources.pickFirsts.add("commonMain/default/linkdata/module"); resources.pickFirsts.add("commonMain/default/linkdata/package_androidx/0_androidx.knm"); resources.pickFirsts.add("META-INF/kotlin-project-structure-metadata.json"); resources.merges.add("commonMain/default/manifest"); resources.merges.add("nonJvmMain/default/manifest"); resources.merges.add("nativeMain/default/manifest") } }
     configurations.all { resolutionStrategy { force("org.jetbrains.kotlin:kotlin-stdlib:1.9.22"); force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22"); force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.22"); force("androidx.collection:collection:1.4.2"); force("androidx.annotation:annotation:1.8.1"); force("androidx.core:core-ktx:1.8.0"); force("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"); force("androidx.collection:collection-ktx:1.4.2") } }
 }
 
@@ -60,4 +60,5 @@ dependencies {
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.startup:startup-runtime:1.1.1")
     implementation("androidx.interpolator:interpolator:1.0.0")
+    implementation("com.google.android.gms:play-services-auth:21.4.0")
 }
