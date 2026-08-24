@@ -8,12 +8,37 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.util.ArrayDeque
 
-/** SAF-based sync engine. Builds one index per side, supports cancellation and progress. */
+/** SAF-based sync engine. Builds one index per side, supports cancellation and detailed statistics. */
 class SyncEngine(private val resolver: ContentResolver, private val context: Context) {
     enum class Direction { TWO_WAY, UPLOAD_ONLY, UPLOAD_MIRROR, UPLOAD_THEN_DELETE, DOWNLOAD_ONLY, DOWNLOAD_MIRROR, DOWNLOAD_THEN_DELETE }
 
-    data class Progress(val filesProcessed: Int, val totalFiles: Int, val filesChanged: Int, val bytesTransferred: Long, val currentPath: String)
-    data class Result(val filesProcessed: Int, val filesChanged: Int, val bytesTransferred: Long, val cancelled: Boolean, val error: String? = null)
+    data class Progress(
+        val filesProcessed: Int,
+        val totalFiles: Int,
+        val filesChanged: Int,
+        val uploadedFiles: Int,
+        val downloadedFiles: Int,
+        val videoFiles: Int,
+        val audioFiles: Int,
+        val documentFiles: Int,
+        val otherFiles: Int,
+        val bytesTransferred: Long,
+        val currentPath: String
+    )
+
+    data class Result(
+        val filesProcessed: Int,
+        val filesChanged: Int,
+        val uploadedFiles: Int,
+        val downloadedFiles: Int,
+        val videoFiles: Int,
+        val audioFiles: Int,
+        val documentFiles: Int,
+        val otherFiles: Int,
+        val bytesTransferred: Long,
+        val cancelled: Boolean,
+        val error: String? = null
+    )
 
     @Volatile private var cancelled = false
     fun cancel() { cancelled = true }
@@ -24,7 +49,7 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
         return try {
             val source = index(sourceTree)
             val target = index(targetTree)
-            if (cancelled) return Result(0, 0, 0, true)
+            if (cancelled) return Result(0, 0, 0, 0, 0, 0, 0, 0, 0, true)
             val result = when (direction) {
                 Direction.TWO_WAY -> twoWay(sourceTree, targetTree, source, target, listener)
                 Direction.UPLOAD_ONLY -> oneWay(sourceTree, targetTree, source, target, false, listener)
@@ -34,48 +59,121 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
                 Direction.DOWNLOAD_MIRROR -> oneWay(targetTree, sourceTree, target, source, true, listener)
                 Direction.DOWNLOAD_THEN_DELETE -> oneWay(targetTree, sourceTree, target, source, false, listener, true)
             }
-            SyncHistoryManager.add(context, SyncHistoryManager.Entry(System.currentTimeMillis(), direction.name, result.filesProcessed, result.filesChanged, result.bytesTransferred, System.currentTimeMillis() - started, result.error == null && !result.cancelled, result.error ?: if (result.cancelled) "Cancelled" else "Completed"))
+            SyncHistoryManager.add(context, SyncHistoryManager.Entry(
+                timestamp = System.currentTimeMillis(), direction = direction.name,
+                filesProcessed = result.filesProcessed, filesChanged = result.filesChanged,
+                uploadedFiles = result.uploadedFiles, downloadedFiles = result.downloadedFiles,
+                videoFiles = result.videoFiles, audioFiles = result.audioFiles,
+                documentFiles = result.documentFiles, otherFiles = result.otherFiles,
+                bytesTransferred = result.bytesTransferred,
+                durationMs = System.currentTimeMillis() - started,
+                success = result.error == null && !result.cancelled,
+                message = result.error ?: if (result.cancelled) "Cancelled" else "Sync completed"
+            ))
             result
         } catch (e: Exception) {
-            val result = Result(0, 0, 0, cancelled, e.message ?: "Sync failed")
-            SyncHistoryManager.add(context, SyncHistoryManager.Entry(System.currentTimeMillis(), direction.name, 0, 0, 0, System.currentTimeMillis() - started, false, result.error ?: "Sync failed"))
+            val result = Result(0, 0, 0, 0, 0, 0, 0, 0, 0, cancelled, e.message ?: "Sync failed")
+            SyncHistoryManager.add(context, SyncHistoryManager.Entry(
+                timestamp = System.currentTimeMillis(), direction = direction.name,
+                filesProcessed = 0, filesChanged = 0, bytesTransferred = 0,
+                durationMs = System.currentTimeMillis() - started, success = false,
+                message = result.error ?: "Sync failed"
+            ))
             result
+        }
+    }
+
+    private data class Stats(
+        var processed: Int = 0,
+        var changed: Int = 0,
+        var uploaded: Int = 0,
+        var downloaded: Int = 0,
+        var video: Int = 0,
+        var audio: Int = 0,
+        var documents: Int = 0,
+        var other: Int = 0,
+        var bytes: Long = 0
+    ) {
+        fun addCategory(name: String) {
+            when (category(name)) {
+                Category.VIDEO -> video++
+                Category.AUDIO -> audio++
+                Category.DOCUMENT -> documents++
+                Category.OTHER -> other++
+            }
+        }
+    }
+
+    private enum class Category { VIDEO, AUDIO, DOCUMENT, OTHER }
+
+    private fun category(name: String): Category {
+        val ext = name.substringAfterLast('.', "").lowercase()
+        return when (ext) {
+            "mp4", "mkv", "mov", "avi", "webm", "3gp", "m4v", "flv", "wmv", "mpeg", "mpg" -> Category.VIDEO
+            "mp3", "wav", "m4a", "aac", "flac", "ogg", "opus", "wma", "amr" -> Category.AUDIO
+            "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv", "rtf", "odt", "ods", "odp", "epub" -> Category.DOCUMENT
+            else -> Category.OTHER
         }
     }
 
     private fun oneWay(sourceTree: Uri, targetTree: Uri, source: Map<String, Item>, target: Map<String, Item>, mirror: Boolean, listener: ((Progress) -> Unit)?, deleteSourceAfterCopy: Boolean = false): Result {
-        var processed = 0; var changed = 0; var bytes = 0L
+        val stats = Stats()
         val files = source.filterValues { !it.directory }
         for ((path, item) in files) {
-            if (cancelled) return Result(processed, changed, bytes, true)
+            if (cancelled) return result(stats, true)
             val existing = target[path]
             if (existing == null || item.size != existing.size || item.modified > existing.modified) {
-                bytes += copyFile(sourceTree, targetTree, item, path)
-                changed++
+                stats.bytes += copyFile(sourceTree, targetTree, item, path)
+                stats.changed++
+                stats.uploaded++
+                stats.addCategory(item.name)
                 if (deleteSourceAfterCopy) delete(sourceTree, item.id)
             }
-            processed++
-            listener?.invoke(Progress(processed, files.size, changed, bytes, path))
+            stats.processed++
+            listener?.invoke(progress(stats, files.size, path))
         }
-        if (mirror) for ((path, item) in target) if (!item.directory && !source.containsKey(path)) { if (cancelled) return Result(processed, changed, bytes, true); delete(targetTree, item.id); changed++ }
-        return Result(processed, changed, bytes, false)
+        if (mirror) for ((path, item) in target) if (!item.directory && !source.containsKey(path)) {
+            if (cancelled) return result(stats, true)
+            delete(targetTree, item.id)
+            stats.changed++
+        }
+        return result(stats, false)
     }
 
     private fun twoWay(sourceTree: Uri, targetTree: Uri, source: Map<String, Item>, target: Map<String, Item>, listener: ((Progress) -> Unit)?): Result {
-        var processed = 0; var changed = 0; var bytes = 0L
+        val stats = Stats()
         val paths = LinkedHashSet<String>().apply { addAll(source.keys); addAll(target.keys) }
         for (path in paths) {
-            if (cancelled) return Result(processed, changed, bytes, true)
+            if (cancelled) return result(stats, true)
             val a = source[path]; val b = target[path]
             when {
-                a != null && !a.directory && b == null -> { bytes += copyFile(sourceTree, targetTree, a, path); changed++ }
-                b != null && !b.directory && a == null -> { bytes += copyFile(targetTree, sourceTree, b, path); changed++ }
-                a != null && b != null && !a.directory && !b.directory && (a.size != b.size || a.modified != b.modified) -> { if (a.modified >= b.modified) bytes += copyFile(sourceTree, targetTree, a, path) else bytes += copyFile(targetTree, sourceTree, b, path); changed++ }
+                a != null && !a.directory && b == null -> {
+                    stats.bytes += copyFile(sourceTree, targetTree, a, path); stats.changed++; stats.uploaded++; stats.addCategory(a.name)
+                }
+                b != null && !b.directory && a == null -> {
+                    stats.bytes += copyFile(targetTree, sourceTree, b, path); stats.changed++; stats.downloaded++; stats.addCategory(b.name)
+                }
+                a != null && b != null && !a.directory && !b.directory && (a.size != b.size || a.modified != b.modified) -> {
+                    if (a.modified >= b.modified) { stats.bytes += copyFile(sourceTree, targetTree, a, path); stats.uploaded++; stats.addCategory(a.name) }
+                    else { stats.bytes += copyFile(targetTree, sourceTree, b, path); stats.downloaded++; stats.addCategory(b.name) }
+                    stats.changed++
+                }
             }
-            processed++; listener?.invoke(Progress(processed, paths.size, changed, bytes, path))
+            stats.processed++
+            listener?.invoke(progress(stats, paths.size, path))
         }
-        return Result(processed, changed, bytes, false)
+        return result(stats, false)
     }
+
+    private fun progress(stats: Stats, total: Int, path: String) = Progress(
+        stats.processed, total, stats.changed, stats.uploaded, stats.downloaded,
+        stats.video, stats.audio, stats.documents, stats.other, stats.bytes, path
+    )
+
+    private fun result(stats: Stats, cancelled: Boolean) = Result(
+        stats.processed, stats.changed, stats.uploaded, stats.downloaded,
+        stats.video, stats.audio, stats.documents, stats.other, stats.bytes, cancelled
+    )
 
     private data class Item(val id: String, val name: String, val size: Long, val modified: Long, val directory: Boolean)
 
