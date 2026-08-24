@@ -81,8 +81,8 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
         var audio: Int = 0, var documents: Int = 0, var other: Int = 0,
         var bytes: Long = 0
     ) {
-        fun addCategory(name: String) {
-            when (category(name)) {
+        fun addCategory(fileName: String) {
+            when (fileCategory(fileName)) {
                 Category.VIDEO -> video++
                 Category.AUDIO -> audio++
                 Category.DOCUMENT -> documents++
@@ -93,7 +93,7 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
 
     private enum class Category { VIDEO, AUDIO, DOCUMENT, OTHER }
 
-    private fun category(name: String): Category = when (name.substringAfterLast('.', "").lowercase()) {
+    private fun fileCategory(fileName: String): Category = when (fileName.substringAfterLast('.', "").lowercase()) {
         "mp4", "mkv", "mov", "avi", "webm", "3gp", "m4v", "flv", "wmv", "mpeg", "mpg" -> Category.VIDEO
         "mp3", "wav", "m4a", "aac", "flac", "ogg", "opus", "wma", "amr" -> Category.AUDIO
         "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv", "rtf", "odt", "ods", "odp", "epub" -> Category.DOCUMENT
@@ -121,14 +121,9 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
             listener?.invoke(progress(stats, files.size, path))
         }
         if (mirror) {
-            for ((path, item) in target) if (!item.directory && !source.containsKey(path)) {
+            for ((_, item) in target) if (!item.directory && !source.containsKey(item.path)) {
                 if (cancelled) return
-                try {
-                    delete(targetTree, item.id)
-                    stats.changed++
-                } catch (_: Exception) {
-                    stats.failed++
-                }
+                try { delete(targetTree, item.id); stats.changed++ } catch (_: Exception) { stats.failed++ }
             }
         }
     }
@@ -142,28 +137,11 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
                 val a = source[path]
                 val b = target[path]
                 when {
-                    a != null && b == null -> {
-                        stats.bytes += copyFile(sourceTree, targetTree, a, path)
-                        stats.changed++
-                        stats.uploaded++
-                        stats.addCategory(a.name)
-                    }
-                    b != null && a == null -> {
-                        stats.bytes += copyFile(targetTree, sourceTree, b, path)
-                        stats.changed++
-                        stats.downloaded++
-                        stats.addCategory(b.name)
-                    }
+                    a != null && b == null -> { stats.bytes += copyFile(sourceTree, targetTree, a, path); stats.changed++; stats.uploaded++; stats.addCategory(a.name) }
+                    b != null && a == null -> { stats.bytes += copyFile(targetTree, sourceTree, b, path); stats.changed++; stats.downloaded++; stats.addCategory(b.name) }
                     a != null && b != null && (a.size != b.size || a.modified != b.modified) -> {
-                        if (a.modified >= b.modified) {
-                            stats.bytes += copyFile(sourceTree, targetTree, a, path)
-                            stats.uploaded++
-                            stats.addCategory(a.name)
-                        } else {
-                            stats.bytes += copyFile(targetTree, sourceTree, b, path)
-                            stats.downloaded++
-                            stats.addCategory(b.name)
-                        }
+                        if (a.modified >= b.modified) { stats.bytes += copyFile(sourceTree, targetTree, a, path); stats.uploaded++; stats.addCategory(a.name) }
+                        else { stats.bytes += copyFile(targetTree, sourceTree, b, path); stats.downloaded++; stats.addCategory(b.name) }
                         stats.changed++
                     }
                 }
@@ -176,17 +154,10 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
         }
     }
 
-    private fun progress(stats: Stats, total: Int, path: String) = Progress(
-        stats.processed, total, stats.changed, stats.uploaded, stats.downloaded, stats.failed,
-        stats.video, stats.audio, stats.documents, stats.other, stats.bytes, path
-    )
+    private fun progress(stats: Stats, total: Int, path: String) = Progress(stats.processed, total, stats.changed, stats.uploaded, stats.downloaded, stats.failed, stats.video, stats.audio, stats.documents, stats.other, stats.bytes, path)
+    private fun result(stats: Stats, cancelled: Boolean, error: String? = null) = Result(stats.processed, stats.changed, stats.uploaded, stats.downloaded, stats.failed, stats.video, stats.audio, stats.documents, stats.other, stats.bytes, cancelled, error)
 
-    private fun result(stats: Stats, cancelled: Boolean, error: String? = null) = Result(
-        stats.processed, stats.changed, stats.uploaded, stats.downloaded, stats.failed,
-        stats.video, stats.audio, stats.documents, stats.other, stats.bytes, cancelled, error
-    )
-
-    private data class Item(val id: String, val name: String, val mimeType: String, val size: Long, val modified: Long, val directory: Boolean)
+    private data class Item(val id: String, val path: String, val name: String, val mimeType: String, val size: Long, val modified: Long, val directory: Boolean)
 
     private fun index(tree: Uri): Map<String, Item> {
         val result = LinkedHashMap<String, Item>()
@@ -196,13 +167,7 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
             if (cancelled) break
             val (parentPath, parentId) = queue.removeFirst()
             val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId)
-            resolver.query(children, arrayOf(
-                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-                DocumentsContract.Document.COLUMN_MIME_TYPE,
-                DocumentsContract.Document.COLUMN_SIZE,
-                DocumentsContract.Document.COLUMN_LAST_MODIFIED
-            ), null, null, null)?.use { c ->
+            resolver.query(children, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE, DocumentsContract.Document.COLUMN_SIZE, DocumentsContract.Document.COLUMN_LAST_MODIFIED), null, null, null)?.use { c ->
                 val id = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
                 val name = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
                 val mime = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
@@ -214,7 +179,7 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
                     val path = if (parentPath.isEmpty()) childName else "$parentPath/$childName"
                     val childMime = c.getString(mime) ?: "application/octet-stream"
                     val dir = childMime == DocumentsContract.Document.MIME_TYPE_DIR
-                    result[path] = Item(childId, childName, childMime, if (c.isNull(size)) 0 else c.getLong(size), if (c.isNull(modified)) 0 else c.getLong(modified), dir)
+                    result[path] = Item(childId, path, childName, childMime, if (c.isNull(size)) 0 else c.getLong(size), if (c.isNull(modified)) 0 else c.getLong(modified), dir)
                     if (dir) queue.add(path to childId)
                 }
             }
@@ -227,25 +192,14 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
         val parentId = ensureFolderPath(targetTree, path.substringBeforeLast('/', ""))
         val parentUri = DocumentsContract.buildDocumentUriUsingTree(targetTree, parentId)
         val existing = findChild(targetTree, parentId, item.name)
-        val targetUri = if (existing != null) {
-            DocumentsContract.buildDocumentUriUsingTree(targetTree, existing)
-        } else {
-            DocumentsContract.createDocument(resolver, parentUri, item.mimeType, item.name)
-                ?: throw IllegalStateException("Unable to create target file: $path")
-        }
+        val targetUri = if (existing != null) DocumentsContract.buildDocumentUriUsingTree(targetTree, existing) else DocumentsContract.createDocument(resolver, parentUri, item.mimeType, item.name) ?: throw IllegalStateException("Unable to create target file: $path")
         resolver.openInputStream(sourceUri).use { input ->
             resolver.openOutputStream(targetUri, "wt").use { output ->
                 if (input == null || output == null) throw IllegalStateException("Unable to open file: $path")
                 BufferedInputStream(input).use { inBuf ->
                     BufferedOutputStream(output).use { outBuf ->
-                        val buffer = ByteArray(64 * 1024)
-                        var total = 0L
-                        while (!cancelled) {
-                            val n = inBuf.read(buffer)
-                            if (n < 0) break
-                            outBuf.write(buffer, 0, n)
-                            total += n
-                        }
+                        val buffer = ByteArray(64 * 1024); var total = 0L
+                        while (!cancelled) { val n = inBuf.read(buffer); if (n < 0) break; outBuf.write(buffer, 0, n); total += n }
                         outBuf.flush()
                         if (cancelled) throw SyncCancelledException()
                         return total
@@ -261,8 +215,7 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
         for (part in path.split('/').filter { it.isNotEmpty() }) {
             current = findChild(tree, current, part) ?: run {
                 val parentUri = DocumentsContract.buildDocumentUriUsingTree(tree, current)
-                val created = DocumentsContract.createDocument(resolver, parentUri, DocumentsContract.Document.MIME_TYPE_DIR, part)
-                    ?: throw IllegalStateException("Unable to create target folder: $part")
+                val created = DocumentsContract.createDocument(resolver, parentUri, DocumentsContract.Document.MIME_TYPE_DIR, part) ?: throw IllegalStateException("Unable to create target folder: $part")
                 DocumentsContract.getDocumentId(created)
             }
         }
@@ -280,9 +233,7 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
     }
 
     private fun delete(tree: Uri, id: String) {
-        if (!DocumentsContract.deleteDocument(resolver, DocumentsContract.buildDocumentUriUsingTree(tree, id))) {
-            throw IllegalStateException("Unable to delete document")
-        }
+        if (!DocumentsContract.deleteDocument(resolver, DocumentsContract.buildDocumentUriUsingTree(tree, id))) throw IllegalStateException("Unable to delete document")
     }
 
     private class SyncCancelledException : Exception("Sync cancelled")
