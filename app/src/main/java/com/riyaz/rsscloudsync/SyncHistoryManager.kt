@@ -15,6 +15,12 @@ object SyncHistoryManager {
         val direction: String,
         val filesProcessed: Int,
         val filesChanged: Int,
+        val uploadedFiles: Int = 0,
+        val downloadedFiles: Int = 0,
+        val videoFiles: Int = 0,
+        val audioFiles: Int = 0,
+        val documentFiles: Int = 0,
+        val otherFiles: Int = 0,
         val bytesTransferred: Long,
         val durationMs: Long,
         val success: Boolean,
@@ -47,6 +53,12 @@ object SyncHistoryManager {
         put("direction", e.direction)
         put("filesProcessed", e.filesProcessed)
         put("filesChanged", e.filesChanged)
+        put("uploadedFiles", e.uploadedFiles)
+        put("downloadedFiles", e.downloadedFiles)
+        put("videoFiles", e.videoFiles)
+        put("audioFiles", e.audioFiles)
+        put("documentFiles", e.documentFiles)
+        put("otherFiles", e.otherFiles)
         put("bytesTransferred", e.bytesTransferred)
         put("durationMs", e.durationMs)
         put("success", e.success)
@@ -54,9 +66,19 @@ object SyncHistoryManager {
     }
 
     private fun fromJson(o: JSONObject) = Entry(
-        o.optLong("timestamp"), o.optString("direction"),
-        o.optInt("filesProcessed"), o.optInt("filesChanged"),
-        o.optLong("bytesTransferred"), o.optLong("durationMs"),
-        o.optBoolean("success"), o.optString("message")
+        timestamp = o.optLong("timestamp"),
+        direction = o.optString("direction"),
+        filesProcessed = o.optInt("filesProcessed"),
+        filesChanged = o.optInt("filesChanged"),
+        uploadedFiles = o.optInt("uploadedFiles"),
+        downloadedFiles = o.optInt("downloadedFiles"),
+        videoFiles = o.optInt("videoFiles"),
+        audioFiles = o.optInt("audioFiles"),
+        documentFiles = o.optInt("documentFiles"),
+        otherFiles = o.optInt("otherFiles"),
+        bytesTransferred = o.optLong("bytesTransferred"),
+        durationMs = o.optLong("durationMs"),
+        success = o.optBoolean("success"),
+        message = o.optString("message")
     )
 }
