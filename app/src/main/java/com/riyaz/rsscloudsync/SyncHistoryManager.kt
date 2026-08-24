@@ -17,6 +17,7 @@ object SyncHistoryManager {
         val filesChanged: Int,
         val uploadedFiles: Int = 0,
         val downloadedFiles: Int = 0,
+        val failedFiles: Int = 0,
         val videoFiles: Int = 0,
         val audioFiles: Int = 0,
         val documentFiles: Int = 0,
@@ -49,36 +50,22 @@ object SyncHistoryManager {
     }
 
     private fun toJson(e: Entry) = JSONObject().apply {
-        put("timestamp", e.timestamp)
-        put("direction", e.direction)
-        put("filesProcessed", e.filesProcessed)
-        put("filesChanged", e.filesChanged)
-        put("uploadedFiles", e.uploadedFiles)
-        put("downloadedFiles", e.downloadedFiles)
-        put("videoFiles", e.videoFiles)
-        put("audioFiles", e.audioFiles)
-        put("documentFiles", e.documentFiles)
-        put("otherFiles", e.otherFiles)
-        put("bytesTransferred", e.bytesTransferred)
-        put("durationMs", e.durationMs)
-        put("success", e.success)
-        put("message", e.message)
+        put("timestamp", e.timestamp); put("direction", e.direction)
+        put("filesProcessed", e.filesProcessed); put("filesChanged", e.filesChanged)
+        put("uploadedFiles", e.uploadedFiles); put("downloadedFiles", e.downloadedFiles)
+        put("failedFiles", e.failedFiles); put("videoFiles", e.videoFiles)
+        put("audioFiles", e.audioFiles); put("documentFiles", e.documentFiles)
+        put("otherFiles", e.otherFiles); put("bytesTransferred", e.bytesTransferred)
+        put("durationMs", e.durationMs); put("success", e.success); put("message", e.message)
     }
 
     private fun fromJson(o: JSONObject) = Entry(
-        timestamp = o.optLong("timestamp"),
-        direction = o.optString("direction"),
-        filesProcessed = o.optInt("filesProcessed"),
-        filesChanged = o.optInt("filesChanged"),
-        uploadedFiles = o.optInt("uploadedFiles"),
-        downloadedFiles = o.optInt("downloadedFiles"),
-        videoFiles = o.optInt("videoFiles"),
-        audioFiles = o.optInt("audioFiles"),
-        documentFiles = o.optInt("documentFiles"),
-        otherFiles = o.optInt("otherFiles"),
-        bytesTransferred = o.optLong("bytesTransferred"),
-        durationMs = o.optLong("durationMs"),
-        success = o.optBoolean("success"),
-        message = o.optString("message")
+        timestamp = o.optLong("timestamp"), direction = o.optString("direction"),
+        filesProcessed = o.optInt("filesProcessed"), filesChanged = o.optInt("filesChanged"),
+        uploadedFiles = o.optInt("uploadedFiles"), downloadedFiles = o.optInt("downloadedFiles"),
+        failedFiles = o.optInt("failedFiles"), videoFiles = o.optInt("videoFiles"),
+        audioFiles = o.optInt("audioFiles"), documentFiles = o.optInt("documentFiles"),
+        otherFiles = o.optInt("otherFiles"), bytesTransferred = o.optLong("bytesTransferred"),
+        durationMs = o.optLong("durationMs"), success = o.optBoolean("success"), message = o.optString("message")
     )
 }
