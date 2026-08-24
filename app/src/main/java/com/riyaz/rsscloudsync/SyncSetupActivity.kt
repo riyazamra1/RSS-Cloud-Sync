@@ -29,11 +29,8 @@ class SyncSetupActivity : AppCompatActivity() {
         } catch (_: SecurityException) {
             Toast.makeText(this, "Folder permission could not be saved", Toast.LENGTH_SHORT).show()
         }
-        if (selectingTarget) {
-            preferences.edit().putString("external_storage_uri", uri.toString()).apply()
-        } else {
-            preferences.edit().putString("sync_folder_uri", uri.toString()).apply()
-        }
+        if (selectingTarget) preferences.edit().putString("external_storage_uri", uri.toString()).apply()
+        else preferences.edit().putString("sync_folder_uri", uri.toString()).apply()
         loadFolders()
     }
 
@@ -44,26 +41,11 @@ class SyncSetupActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Sync"
-
-        setupCloudProvider()
-        setupSyncDirection()
-        setupSchedule()
-        loadConfiguration()
-        loadHistory()
-
-        binding.chooseLocalButton.setOnClickListener {
-            selectingTarget = false
-            folderPicker.launch(null)
-        }
-        binding.chooseTargetButton.setOnClickListener {
-            selectingTarget = true
-            folderPicker.launch(null)
-        }
+        setupCloudProvider(); setupSyncDirection(); setupSchedule(); loadConfiguration(); loadHistory()
+        binding.chooseLocalButton.setOnClickListener { selectingTarget = false; folderPicker.launch(null) }
+        binding.chooseTargetButton.setOnClickListener { selectingTarget = true; folderPicker.launch(null) }
         binding.syncNowButton.setOnClickListener { startSync() }
-        binding.clearHistoryButton.setOnClickListener {
-            SyncHistoryManager.clear(this)
-            loadHistory()
-        }
+        binding.clearHistoryButton.setOnClickListener { SyncHistoryManager.clear(this); loadHistory() }
     }
 
     private fun setupCloudProvider() {
@@ -102,13 +84,12 @@ class SyncSetupActivity : AppCompatActivity() {
     private fun prettyUri(value: String): String {
         val uri = Uri.parse(value)
         val raw = uri.lastPathSegment ?: value
-        return raw.substringAfterLast(':').replace('%20', ' ').ifBlank { value }
+        return raw.substringAfterLast(':').replace("%20", " ").ifBlank { value }
     }
 
     private fun selectSpinnerValue(spinner: android.widget.Spinner, value: String) {
         for (index in 0 until spinner.count) if (spinner.getItemAtPosition(index).toString() == value) {
-            spinner.setSelection(index)
-            return
+            spinner.setSelection(index); return
         }
     }
 
@@ -116,14 +97,9 @@ class SyncSetupActivity : AppCompatActivity() {
         val sourceString = preferences.getString("sync_folder_uri", null)
         val targetString = preferences.getString("external_storage_uri", null)
         if (sourceString == null || targetString == null) {
-            AlertDialog.Builder(this)
-                .setTitle("Folders required")
-                .setMessage("Select both the local folder and the cloud / target folder before starting sync.")
-                .setPositiveButton("OK", null)
-                .show()
+            AlertDialog.Builder(this).setTitle("Folders required").setMessage("Select both the local folder and the cloud / target folder before starting sync.").setPositiveButton("OK", null).show()
             return
         }
-
         val directionName = binding.syncDirectionSpinner.selectedItem.toString()
         val direction = when (directionName) {
             "Upload only" -> SyncEngine.Direction.UPLOAD_ONLY
@@ -136,12 +112,7 @@ class SyncSetupActivity : AppCompatActivity() {
         }
         val cloudProvider = binding.cloudProviderSpinner.selectedItem.toString()
         val schedule = binding.scheduleSpinner.selectedItem.toString()
-        preferences.edit()
-            .putString("cloud_provider", cloudProvider)
-            .putString("sync_direction", directionName)
-            .putString("sync_schedule", schedule)
-            .putBoolean("sync_configuration_saved", true)
-            .apply()
+        preferences.edit().putString("cloud_provider", cloudProvider).putString("sync_direction", directionName).putString("sync_schedule", schedule).putBoolean("sync_configuration_saved", true).apply()
 
         binding.syncNowButton.isEnabled = false
         binding.syncStatusText.text = "Syncing..."
@@ -156,7 +127,7 @@ class SyncSetupActivity : AppCompatActivity() {
                     if (isFinishing || isDestroyed) return@runOnUiThread
                     val percent = if (progress.totalFiles > 0) progress.filesProcessed * 100 / progress.totalFiles else 100
                     binding.progressText.text = "$percent%"
-                    binding.syncStatusDetail.text = "${progress.filesProcessed}/${progress.totalFiles} files • ${progress.filesChanged} changed"
+                    binding.syncStatusDetail.text = "${progress.filesProcessed}/${progress.totalFiles} files • ${progress.filesChanged} changed • ${formatBytes(progress.bytesTransferred)}"
                     binding.currentFileText.text = progress.currentPath
                 }
             }
@@ -173,7 +144,7 @@ class SyncSetupActivity : AppCompatActivity() {
                         binding.syncStatusDetail.text = result.error
                     }
                     else -> {
-                        binding.syncStatusText.text = "Sync complete"
+                        binding.syncStatusText.text = "Sync completed"
                         binding.syncStatusDetail.text = "${result.filesChanged} files changed • ${formatBytes(result.bytesTransferred)} transferred"
                         binding.progressText.text = "100%"
                     }
@@ -191,25 +162,38 @@ class SyncSetupActivity : AppCompatActivity() {
         }
         binding.historyText.text = entries.take(10).joinToString("\n\n") { entry ->
             val time = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.getDefault()).format(Date(entry.timestamp))
-            val status = if (entry.success) "✓ Completed" else "✕ Failed"
-            "$status  •  $time\n${entry.direction.replace('_', ' ')}  •  ${entry.filesChanged} changed  •  ${formatBytes(entry.bytesTransferred)}\n${entry.message}"
+            val status = if (entry.success) "✓ Sync completed" else "✕ Sync failed"
+            val duration = formatDuration(entry.durationMs)
+            buildString {
+                append(status).append("\n")
+                append("Files:       ").append(entry.filesProcessed).append('\n')
+                append("Uploaded:    ").append(entry.uploadedFiles).append('\n')
+                append("Downloaded:  ").append(entry.downloadedFiles).append('\n')
+                append("Video:       ").append(entry.videoFiles).append('\n')
+                append("Audio:       ").append(entry.audioFiles).append('\n')
+                append("Documents:   ").append(entry.documentFiles).append('\n')
+                append("Other:       ").append(entry.otherFiles).append('\n')
+                append("Transferred: ").append(formatBytes(entry.bytesTransferred)).append('\n')
+                append("Duration:    ").append(duration).append('\n')
+                append("Result:      ").append(if (entry.success) "Success" else "Failed").append('\n')
+                append("Method:      ").append(entry.direction.replace('_', ' ')).append('\n')
+                append("Time:        ").append(time)
+            }
         }
+    }
+
+    private fun formatDuration(ms: Long): String {
+        val totalSeconds = (ms / 1000).coerceAtLeast(0)
+        return String.format(Locale.getDefault(), "%02d:%02d", totalSeconds / 60, totalSeconds % 60)
     }
 
     private fun formatBytes(bytes: Long): String {
         if (bytes < 1024) return "$bytes B"
-        var value = bytes.toDouble()
-        val units = arrayOf("KB", "MB", "GB", "TB")
-        var i = 0
+        var value = bytes.toDouble(); val units = arrayOf("KB", "MB", "GB", "TB"); var i = 0
         while (value >= 1024 && i < units.lastIndex) { value /= 1024; i++ }
-        return String.format(Locale.getDefault(), "%.1f %s", value, units[i])
+        return String.format(Locale.getDefault(), "%.2f %s", value, units[i])
     }
 
     override fun onSupportNavigateUp(): Boolean { finish(); return true }
-
-    override fun onDestroy() {
-        activeEngine?.cancel()
-        syncExecutor.shutdownNow()
-        super.onDestroy()
-    }
+    override fun onDestroy() { activeEngine?.cancel(); syncExecutor.shutdownNow(); super.onDestroy() }
 }
