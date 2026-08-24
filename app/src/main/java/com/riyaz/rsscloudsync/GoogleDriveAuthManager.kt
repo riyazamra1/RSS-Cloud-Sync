@@ -40,15 +40,22 @@ object GoogleDriveAuthManager {
         }
     }
 
-    fun clearConnection(context: Context) {
+    fun switchAccount(context: Context) {
         signInClient(context).signOut()
         context.getSharedPreferences("rss_cloud_sync", Context.MODE_PRIVATE)
             .edit()
-            .putStringSet("connected_cloud_providers", emptySet())
             .remove("google_drive_account_email")
             .remove("google_drive_account_name")
             .remove("google_drive_target_folder_id")
             .remove("google_drive_target_folder_name")
             .apply()
+    }
+
+    fun clearConnection(context: Context) {
+        switchAccount(context)
+        val prefs = context.getSharedPreferences("rss_cloud_sync", Context.MODE_PRIVATE)
+        val connected = (prefs.getStringSet("connected_cloud_providers", emptySet()) ?: emptySet()).toMutableSet()
+        connected.remove(PROVIDER)
+        prefs.edit().putStringSet("connected_cloud_providers", connected).apply()
     }
 }
