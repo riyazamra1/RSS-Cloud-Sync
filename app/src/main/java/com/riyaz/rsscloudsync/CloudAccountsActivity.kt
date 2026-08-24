@@ -24,7 +24,6 @@ class CloudAccountsActivity : AppCompatActivity() {
             refreshState()
             return@registerForActivityResult
         }
-
         val account = GoogleDriveAuthManager.accountFromResult(
             GoogleSignIn.getSignedInAccountFromIntent(result.data)
         )
@@ -33,23 +32,15 @@ class CloudAccountsActivity : AppCompatActivity() {
             refreshState()
             return@registerForActivityResult
         }
-
-        val connected = (
-            prefs.getStringSet("connected_cloud_providers", emptySet()) ?: emptySet()
-            ).toMutableSet()
+        val connected = (prefs.getStringSet("connected_cloud_providers", emptySet()) ?: emptySet()).toMutableSet()
         connected.add(GoogleDriveAuthManager.PROVIDER)
-
         prefs.edit()
             .putStringSet("connected_cloud_providers", connected)
             .putString("cloud_provider", GoogleDriveAuthManager.PROVIDER)
             .putString("selected_cloud_provider", GoogleDriveAuthManager.PROVIDER)
             .putString("google_drive_account_email", account.email ?: "")
-            .putString(
-                "google_drive_account_name",
-                account.displayName ?: account.email ?: "Google Drive"
-            )
+            .putString("google_drive_account_name", account.displayName ?: account.email ?: "Google Drive")
             .apply()
-
         Toast.makeText(this, "Google Drive connected", Toast.LENGTH_SHORT).show()
         refreshState()
         loadGoogleQuota()
@@ -87,7 +78,11 @@ class CloudAccountsActivity : AppCompatActivity() {
     }
 
     private fun connectGoogleDrive() {
+        val connected = prefs.getStringSet("connected_cloud_providers", emptySet())?.contains(GoogleDriveAuthManager.PROVIDER) == true
         prefs.edit().putString("selected_cloud_provider", GoogleDriveAuthManager.PROVIDER).apply()
+        if (connected) {
+            GoogleDriveAuthManager.switchAccount(this)
+        }
         googleSignInLauncher.launch(GoogleDriveAuthManager.signInClient(this).signInIntent)
     }
 
@@ -100,39 +95,21 @@ class CloudAccountsActivity : AppCompatActivity() {
         val selected = prefs.getString("cloud_provider", "") ?: ""
         val connected = prefs.getStringSet("connected_cloud_providers", emptySet()) ?: emptySet()
         val googleEmail = prefs.getString("google_drive_account_email", "") ?: ""
-
-        updateProvider(
-            binding.googleDriveStorageText,
-            binding.googleDriveProgress,
-            connected.contains(GoogleDriveAuthManager.PROVIDER),
-            selected == GoogleDriveAuthManager.PROVIDER,
-            googleEmail
-        )
+        updateProvider(binding.googleDriveStorageText, binding.googleDriveProgress, connected.contains(GoogleDriveAuthManager.PROVIDER), selected == GoogleDriveAuthManager.PROVIDER, googleEmail)
         updateProvider(binding.oneDriveStorageText, binding.oneDriveProgress, connected.contains("OneDrive"), selected == "OneDrive")
         updateProvider(binding.dropboxStorageText, binding.dropboxProgress, connected.contains("Dropbox"), selected == "Dropbox")
         updateProvider(binding.megaStorageText, binding.megaProgress, connected.contains("MEGA"), selected == "MEGA")
         updateProvider(binding.boxStorageText, binding.boxProgress, connected.contains("Box"), selected == "Box")
-
         binding.webDavStorageText.text = if (connected.contains("WebDAV")) "Connected" else "Not connected"
         binding.webDavProgress.isIndeterminate = false
         binding.webDavProgress.setProgressCompat(if (connected.contains("WebDAV")) 100 else 0, false)
-
-        binding.totalStorageText.text = if (connected.isEmpty()) {
-            "No cloud account connected"
-        } else {
-            "Connected accounts: ${connected.size}"
-        }
+        binding.totalStorageText.text = if (connected.isEmpty()) "No cloud account connected" else "Connected accounts: ${connected.size}"
         binding.totalStorageProgress.isIndeterminate = false
         binding.totalStorageProgress.setProgressCompat(0, false)
+        binding.googleDriveConnect.text = if (connected.contains(GoogleDriveAuthManager.PROVIDER)) "CHANGE" else "CONNECT"
     }
 
-    private fun updateProvider(
-        text: android.widget.TextView,
-        progress: com.google.android.material.progressindicator.LinearProgressIndicator,
-        connected: Boolean,
-        selected: Boolean,
-        account: String = ""
-    ) {
+    private fun updateProvider(text: android.widget.TextView, progress: com.google.android.material.progressindicator.LinearProgressIndicator, connected: Boolean, selected: Boolean, account: String = "") {
         text.text = when {
             connected && account.isNotBlank() -> "Connected • $account"
             connected -> "Connected"
@@ -144,24 +121,15 @@ class CloudAccountsActivity : AppCompatActivity() {
     }
 
     private fun loadGoogleQuota() {
-        val connected = prefs.getStringSet("connected_cloud_providers", emptySet())
-            ?.contains(GoogleDriveAuthManager.PROVIDER) == true
+        val connected = prefs.getStringSet("connected_cloud_providers", emptySet())?.contains(GoogleDriveAuthManager.PROVIDER) == true
         if (!connected) return
-
         binding.googleDriveStorageText.text = "Loading Google Drive storage..."
         executor.execute {
             try {
                 val quota = DriveClient(this).quotaText()
-                runOnUiThread {
-                    if (!isFinishing) binding.googleDriveStorageText.text = quota
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    if (!isFinishing) {
-                        binding.googleDriveStorageText.text =
-                            "Connected • quota unavailable"
-                    }
-                }
+                runOnUiThread { if (!isFinishing) binding.googleDriveStorageText.text = quota }
+            } catch (_: Exception) {
+                runOnUiThread { if (!isFinishing) binding.googleDriveStorageText.text = "Connected • quota unavailable" }
             }
         }
     }
