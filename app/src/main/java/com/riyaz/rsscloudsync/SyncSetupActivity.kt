@@ -3,6 +3,8 @@ package com.riyaz.rsscloudsync
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.os.StatFs
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,6 +34,7 @@ class SyncSetupActivity : AppCompatActivity() {
         if (selectingTarget) preferences.edit().putString("external_storage_uri", uri.toString()).apply()
         else preferences.edit().putString("sync_folder_uri", uri.toString()).apply()
         loadFolders()
+        updateStorageInfo()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,16 +44,24 @@ class SyncSetupActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Sync"
-        setupCloudProvider(); setupSyncDirection(); setupSchedule(); loadConfiguration(); loadHistory()
+        setupCloudProvider()
+        setupSyncDirection()
+        setupSchedule()
+        loadConfiguration()
+        loadHistory()
         binding.chooseLocalButton.setOnClickListener { selectingTarget = false; folderPicker.launch(null) }
         binding.chooseTargetButton.setOnClickListener { selectingTarget = true; folderPicker.launch(null) }
-        binding.syncNowButton.setOnClickListener { startSync() }
+        binding.syncNowButton.setOnClickListener { if (activeEngine == null) startSync() else activeEngine?.cancel() }
         binding.clearHistoryButton.setOnClickListener { SyncHistoryManager.clear(this); loadHistory() }
     }
 
     private fun setupCloudProvider() {
         val providers = arrayOf("Google Drive", "OneDrive", "Dropbox", "MEGA", "Box", "pCloud", "WebDAV", "NAS / SMB", "External storage")
         binding.cloudProviderSpinner.adapter = spinnerAdapter(providers)
+        binding.cloudProviderSpinner.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) { updateStorageInfo() }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
+        })
     }
 
     private fun setupSyncDirection() {
@@ -63,15 +74,14 @@ class SyncSetupActivity : AppCompatActivity() {
         binding.scheduleSpinner.adapter = spinnerAdapter(schedules)
     }
 
-    private fun spinnerAdapter(items: Array<String>): ArrayAdapter<String> = ArrayAdapter(this, android.R.layout.simple_spinner_item, items).apply {
-        setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-    }
+    private fun spinnerAdapter(items: Array<String>): ArrayAdapter<String> = ArrayAdapter(this, android.R.layout.simple_spinner_item, items).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
 
     private fun loadConfiguration() {
         loadFolders()
         preferences.getString("cloud_provider", null)?.let { selectSpinnerValue(binding.cloudProviderSpinner, it) }
         preferences.getString("sync_direction", null)?.let { selectSpinnerValue(binding.syncDirectionSpinner, it) }
         preferences.getString("sync_schedule", null)?.let { selectSpinnerValue(binding.scheduleSpinner, it) }
+        updateStorageInfo()
     }
 
     private fun loadFolders() {
@@ -79,6 +89,7 @@ class SyncSetupActivity : AppCompatActivity() {
         val target = preferences.getString("external_storage_uri", null)
         binding.localFolderText.text = local?.let { prettyUri(it) } ?: "No local folder selected"
         binding.targetFolderText.text = target?.let { prettyUri(it) } ?: "No cloud / target folder selected"
+        binding.cloudAccountName.text = binding.cloudProviderSpinner.selectedItem?.toString() ?: "External storage"
     }
 
     private fun prettyUri(value: String): String {
@@ -87,10 +98,33 @@ class SyncSetupActivity : AppCompatActivity() {
         return raw.substringAfterLast(':').replace("%20", " ").ifBlank { value }
     }
 
-    private fun selectSpinnerValue(spinner: android.widget.Spinner, value: String) {
-        for (index in 0 until spinner.count) if (spinner.getItemAtPosition(index).toString() == value) {
-            spinner.setSelection(index); return
+    private fun updateStorageInfo() {
+        if (!::binding.isInitialized) return
+        val provider = binding.cloudProviderSpinner.selectedItem?.toString() ?: "External storage"
+        binding.cloudAccountName.text = provider
+        if (provider == "External storage") {
+            try {
+                val stat = StatFs(Environment.getExternalStorageDirectory().path)
+                val total = stat.totalBytes.coerceAtLeast(1L)
+                val free = stat.availableBytes.coerceAtLeast(0L)
+                val used = (total - free).coerceAtLeast(0L)
+                val percent = ((used.toDouble() / total.toDouble()) * 100.0).toInt().coerceIn(0, 100)
+                binding.storageUsageText.text = "Used: ${formatBytes(used)}   •   Free: ${formatBytes(free)}   •   Total: ${formatBytes(total)}"
+                binding.storageProgress.isIndeterminate = false
+                binding.storageProgress.setProgressCompat(percent, true)
+            } catch (_: Exception) {
+                binding.storageUsageText.text = "Storage information unavailable"
+                binding.storageProgress.isIndeterminate = false
+                binding.storageProgress.setProgressCompat(0, false)
+            }
+        } else {
+            binding.storageUsageText.text = "Account selected • Provider quota unavailable through Android's folder picker"
+            binding.storageProgress.isIndeterminate = true
         }
+    }
+
+    private fun selectSpinnerValue(spinner: android.widget.Spinner, value: String) {
+        for (index in 0 until spinner.count) if (spinner.getItemAtPosition(index).toString() == value) { spinner.setSelection(index); return }
     }
 
     private fun startSync() {
@@ -114,7 +148,8 @@ class SyncSetupActivity : AppCompatActivity() {
         val schedule = binding.scheduleSpinner.selectedItem.toString()
         preferences.edit().putString("cloud_provider", cloudProvider).putString("sync_direction", directionName).putString("sync_schedule", schedule).putBoolean("sync_configuration_saved", true).apply()
 
-        binding.syncNowButton.isEnabled = false
+        binding.syncNowButton.isEnabled = true
+        binding.syncNowButton.text = "CANCEL SYNC"
         binding.syncStatusText.text = "Syncing..."
         binding.syncStatusDetail.text = "Preparing files"
         binding.progressText.text = "0%"
@@ -127,54 +162,45 @@ class SyncSetupActivity : AppCompatActivity() {
                     if (isFinishing || isDestroyed) return@runOnUiThread
                     val percent = if (progress.totalFiles > 0) progress.filesProcessed * 100 / progress.totalFiles else 100
                     binding.progressText.text = "$percent%"
-                    binding.syncStatusDetail.text = "${progress.filesProcessed}/${progress.totalFiles} files • ${progress.filesChanged} changed • ${formatBytes(progress.bytesTransferred)}"
+                    binding.syncStatusDetail.text = "${progress.filesProcessed}/${progress.totalFiles} files • ${progress.filesChanged} changed • ↑${progress.uploadedFiles} ↓${progress.downloadedFiles} • ${formatBytes(progress.bytesTransferred)}"
                     binding.currentFileText.text = progress.currentPath
                 }
             }
             runOnUiThread {
                 activeEngine = null
+                binding.syncNowButton.text = "SYNC NOW"
                 binding.syncNowButton.isEnabled = true
                 when {
-                    result.cancelled -> {
-                        binding.syncStatusText.text = "Sync cancelled"
-                        binding.syncStatusDetail.text = "Sync stopped safely"
-                    }
-                    result.error != null -> {
-                        binding.syncStatusText.text = "Sync failed"
-                        binding.syncStatusDetail.text = result.error
-                    }
+                    result.cancelled -> { binding.syncStatusText.text = "Sync cancelled"; binding.syncStatusDetail.text = "Sync stopped safely" }
+                    result.error != null -> { binding.syncStatusText.text = "Sync failed"; binding.syncStatusDetail.text = result.error }
                     else -> {
                         binding.syncStatusText.text = "Sync completed"
-                        binding.syncStatusDetail.text = "${result.filesChanged} files changed • ${formatBytes(result.bytesTransferred)} transferred"
+                        binding.syncStatusDetail.text = "Files: ${result.filesProcessed} • Uploaded: ${result.uploadedFiles} • Downloaded: ${result.downloadedFiles} • ${formatBytes(result.bytesTransferred)} transferred"
                         binding.progressText.text = "100%"
                     }
                 }
                 loadHistory()
+                updateStorageInfo()
             }
         }
     }
 
     private fun loadHistory() {
         val entries = SyncHistoryManager.get(this)
-        if (entries.isEmpty()) {
-            binding.historyText.text = "No sync history yet.\nYour completed syncs will appear here."
-            return
-        }
+        if (entries.isEmpty()) { binding.historyText.text = "No sync history yet.\nYour completed syncs will appear here."; return }
         binding.historyText.text = entries.take(10).joinToString("\n\n") { entry ->
             val time = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.getDefault()).format(Date(entry.timestamp))
             val status = if (entry.success) "✓ Sync completed" else "✕ Sync failed"
-            val duration = formatDuration(entry.durationMs)
             buildString {
-                append(status).append("\n")
+                append(status).append('\n')
                 append("Files:       ").append(entry.filesProcessed).append('\n')
                 append("Uploaded:    ").append(entry.uploadedFiles).append('\n')
                 append("Downloaded:  ").append(entry.downloadedFiles).append('\n')
                 append("Video:       ").append(entry.videoFiles).append('\n')
                 append("Audio:       ").append(entry.audioFiles).append('\n')
                 append("Documents:   ").append(entry.documentFiles).append('\n')
-                append("Other:       ").append(entry.otherFiles).append('\n')
                 append("Transferred: ").append(formatBytes(entry.bytesTransferred)).append('\n')
-                append("Duration:    ").append(duration).append('\n')
+                append("Duration:    ").append(formatDuration(entry.durationMs)).append('\n')
                 append("Result:      ").append(if (entry.success) "Success" else "Failed").append('\n')
                 append("Method:      ").append(entry.direction.replace('_', ' ')).append('\n')
                 append("Time:        ").append(time)
