@@ -10,6 +10,7 @@
         <activity android:name=".MainActivity" android:exported="false" />
         <activity android:name=".SyncSetupActivity" android:exported="false" />
         <activity android:name=".FolderSyncActivity" android:exported="false" />
+        <activity android:name=".ExternalStorageActivity" android:exported="false" />
         <activity android:name=".AboutActivity" android:exported="false" />
         <activity android:name=".ContactActivity" android:exported="false" />
         <activity android:name=".TermsActivity" android:exported="false" />
