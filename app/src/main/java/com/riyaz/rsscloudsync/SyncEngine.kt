@@ -36,7 +36,7 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
         return try {
             val source = index(sourceTree)
             val target = index(targetTree)
-            if (cancelled) return finish(started, direction, result(stats, true, "Sync cancelled"))
+            if (cancelled) return finish(started, result(stats, true, "Sync cancelled"))
             when (direction) {
                 Direction.TWO_WAY -> twoWay(sourceTree, targetTree, source, target, stats, listener)
                 Direction.UPLOAD_ONLY -> oneWay(sourceTree, targetTree, source, target, false, listener, false, true, stats)
@@ -51,18 +51,18 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
                 stats.failed > 0 -> "Completed with ${stats.failed} file error${if (stats.failed == 1) "" else "s"}"
                 else -> null
             }
-            finish(started, direction, result(stats, cancelled, message))
+            finish(started, result(stats, cancelled, message))
         } catch (e: SyncCancelledException) {
-            finish(started, direction, result(stats, true, "Sync cancelled"))
+            finish(started, result(stats, true, "Sync cancelled"))
         } catch (e: Exception) {
             val message = e.message ?: "Sync failed"
-            finish(started, direction, result(stats, cancelled, if (stats.bytes > 0L) "Completed with warning: $message" else message))
+            finish(started, result(stats, cancelled, if (stats.bytes > 0L) "Completed with warning: $message" else message))
         }
     }
 
-    private fun finish(started: Long, direction: Direction, result: Result): Result {
+    private fun finish(started: Long, result: Result): Result {
         SyncHistoryManager.add(context, SyncHistoryManager.Entry(
-            timestamp = System.currentTimeMillis(), direction = direction.name,
+            timestamp = System.currentTimeMillis(), direction = "sync",
             filesProcessed = result.filesProcessed, filesChanged = result.filesChanged,
             uploadedFiles = result.uploadedFiles, downloadedFiles = result.downloadedFiles,
             failedFiles = result.failedFiles, videoFiles = result.videoFiles,
@@ -82,24 +82,13 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
         var bytes: Long = 0
     ) {
         fun addCategory(fileName: String) {
-            when (classifyFileName(fileName)) {
-                Category.VIDEO -> video++
-                Category.AUDIO -> audio++
-                Category.DOCUMENT -> documents++
-                Category.OTHER -> other++
+            val extension = fileName.substringAfterLast('.', "").lowercase()
+            when (extension) {
+                "mp4", "mkv", "mov", "avi", "webm", "3gp", "m4v", "flv", "wmv", "mpeg", "mpg" -> video++
+                "mp3", "wav", "m4a", "aac", "flac", "ogg", "opus", "wma", "amr" -> audio++
+                "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv", "rtf", "odt", "ods", "odp", "epub" -> documents++
+                else -> other++
             }
-        }
-    }
-
-    private enum class Category { VIDEO, AUDIO, DOCUMENT, OTHER }
-
-    private fun classifyFileName(fileName: String): Category {
-        val extension = fileName.substringAfterLast('.', "").lowercase()
-        return when (extension) {
-            "mp4", "mkv", "mov", "avi", "webm", "3gp", "m4v", "flv", "wmv", "mpeg", "mpg" -> Category.VIDEO
-            "mp3", "wav", "m4a", "aac", "flac", "ogg", "opus", "wma", "amr" -> Category.AUDIO
-            "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv", "rtf", "odt", "ods", "odp", "epub" -> Category.DOCUMENT
-            else -> Category.OTHER
         }
     }
 
