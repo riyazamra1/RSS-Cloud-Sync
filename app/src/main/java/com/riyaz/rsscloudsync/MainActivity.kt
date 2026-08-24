@@ -103,7 +103,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupDrawer() {
         binding.toolbar.setNavigationOnClickListener { binding.drawerLayout.openDrawer(binding.navigationView) }
         binding.navigationView.setNavigationItemSelectedListener { item ->
-            when (item.itemId) { R.id.nav_home -> binding.mainScrollView.smoothScrollTo(0, 0); R.id.nav_folders -> startActivity(Intent(this, FolderSyncActivity::class.java)); R.id.nav_automatic -> openAutomaticSync(); R.id.nav_cloud -> startActivity(Intent(this, CloudAccountsActivity::class.java)); R.id.nav_external -> startActivity(Intent(this, FolderSyncActivity::class.java)); R.id.nav_upgrade -> startActivity(Intent(this, PremiumActivity::class.java)); R.id.nav_about -> startActivity(Intent(this, AboutActivity::class.java)); R.id.nav_contact -> startActivity(Intent(this, ContactActivity::class.java)) }
+            when (item.itemId) { R.id.nav_home -> binding.mainScrollView.smoothScrollTo(0, 0); R.id.nav_folders -> startActivity(Intent(this, FolderSyncActivity::class.java)); R.id.nav_automatic -> openAutomaticSync(); R.id.nav_cloud -> startActivity(Intent(this, CloudAccountsActivity::class.java)); R.id.nav_external -> startActivity(Intent(this, ExternalStorageActivity::class.java)); R.id.nav_upgrade -> startActivity(Intent(this, PremiumActivity::class.java)); R.id.nav_about -> startActivity(Intent(this, AboutActivity::class.java)); R.id.nav_contact -> startActivity(Intent(this, ContactActivity::class.java)) }
             binding.navigationView.setCheckedItem(item.itemId); binding.drawerLayout.closeDrawers(); true
         }
     }
