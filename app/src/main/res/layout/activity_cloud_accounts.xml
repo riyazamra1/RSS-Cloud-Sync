@@ -1,199 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="?attr/colorSurface">
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="?attr/colorSurface">
+    <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="58dp" android:background="@android:color/transparent" android:elevation="0dp" app:navigationIconTint="?attr/colorOnSurface" app:title="Cloud accounts" app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge" app:titleTextColor="?attr/colorOnSurface" />
+    <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true" android:scrollbars="none">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="18dp" android:paddingEnd="18dp" android:paddingBottom="28dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Your cloud storage" android:textColor="?attr/colorOnSurface" android:textSize="28sp" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="See storage usage for every connected provider." android:textColor="?attr/colorOnSurfaceVariant" android:textSize="13sp" />
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="58dp"
-        android:background="@android:color/transparent"
-        android:elevation="0dp"
-        app:navigationIconTint="?attr/colorOnSurface"
-        app:title="Cloud accounts"
-        app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge"
-        app:titleTextColor="?attr/colorOnSurface" />
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="18dp"
-            android:paddingEnd="18dp"
-            android:paddingBottom="28dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Your cloud storage"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="28sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Connect a provider and keep your files in sync."
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="13sp" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="118dp"
-                android:layout_marginTop="18dp"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Storage overview"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0 connected"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
-                        android:text="Connect your first cloud to start syncing"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="12sp" />
-
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:layout_width="match_parent"
-                        android:layout_height="6dp"
-                        android:layout_marginTop="10dp"
-                        android:progress="0"
-                        app:trackCornerRadius="6dp"
-                        app:trackThickness="6dp" />
+            <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="118dp" android:layout_marginTop="18dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="24dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Storage overview" android:textColor="?attr/colorOnSurface" android:textSize="15sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/totalStorageText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="0 GB used • 0 GB free" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="12sp" />
+                    <com.google.android.material.progressindicator.LinearProgressIndicator android:id="@+id/totalStorageProgress" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="10dp" android:progress="0" app:trackCornerRadius="6dp" app:trackThickness="6dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Available providers"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="Cloud accounts" android:textColor="?attr/colorOnSurface" android:textSize="18sp" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Each provider shows used space, remaining space and usage." android:textColor="?attr/colorOnSurfaceVariant" android:textSize="12sp" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="Choose where your files live"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="12sp" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="84dp"
-                android:layout_marginTop="14dp"
-                android:clickable="true"
-                android:focusable="true"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer"
-                app:cardCornerRadius="22dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:padding="14dp">
-                    <ImageView android:layout_width="52dp" android:layout_height="52dp" android:src="@drawable/ic_google_drive" android:contentDescription="Google Drive" />
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:orientation="vertical">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Google Drive" android:textColor="?attr/colorOnSurface" android:textSize="16sp" android:textStyle="bold" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Personal &amp; work files" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" />
-                    </LinearLayout>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/googleDriveConnect" android:layout_width="100dp" android:layout_height="42dp" android:text="CONNECT" android:textSize="10sp" app:cornerRadius="21dp" />
+            <com.google.android.material.card.MaterialCardView android:id="@+id/googleDriveCard" android:layout_width="match_parent" android:layout_height="118dp" android:layout_marginTop="14dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="14dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                        <ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_google_drive" android:contentDescription="Google Drive" />
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Google Drive" android:textColor="?attr/colorOnSurface" android:textSize="15sp" android:textStyle="bold" /><TextView android:id="@+id/googleDriveStorageText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="3.5 GB used • 11.5 GB free" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" /></LinearLayout><com.google.android.material.button.MaterialButton android:id="@+id/googleDriveConnect" android:layout_width="92dp" android:layout_height="40dp" android:text="CONNECT" android:textSize="9sp" app:cornerRadius="20dp" /></LinearLayout>
+                    <com.google.android.material.progressindicator.LinearProgressIndicator android:id="@+id/googleDriveProgress" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="12dp" android:progress="23" app:trackCornerRadius="6dp" app:trackThickness="6dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent" android:layout_height="84dp" android:layout_marginTop="10dp" android:clickable="true" android:focusable="true"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:padding="14dp">
-                    <ImageView android:layout_width="52dp" android:layout_height="52dp" android:src="@drawable/ic_onedrive" android:contentDescription="OneDrive" />
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="OneDrive" android:textColor="?attr/colorOnSurface" android:textSize="16sp" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Microsoft cloud storage" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" /></LinearLayout>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/oneDriveConnect" android:layout_width="100dp" android:layout_height="42dp" android:text="CONNECT" android:textSize="10sp" app:cornerRadius="21dp" />
-                </LinearLayout>
+            <com.google.android.material.card.MaterialCardView android:id="@+id/oneDriveCard" android:layout_width="match_parent" android:layout_height="118dp" android:layout_marginTop="10dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="14dp"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal"><ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_onedrive" android:contentDescription="OneDrive" /><LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="OneDrive" android:textColor="?attr/colorOnSurface" android:textSize="15sp" android:textStyle="bold" /><TextView android:id="@+id/oneDriveStorageText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="0 GB used • 0 GB free" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" /></LinearLayout><com.google.android.material.button.MaterialButton android:id="@+id/oneDriveConnect" android:layout_width="92dp" android:layout_height="40dp" android:text="CONNECT" android:textSize="9sp" app:cornerRadius="20dp" /></LinearLayout><com.google.android.material.progressindicator.LinearProgressIndicator android:id="@+id/oneDriveProgress" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="12dp" android:progress="0" app:trackCornerRadius="6dp" app:trackThickness="6dp" /></LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent" android:layout_height="84dp" android:layout_marginTop="10dp" android:clickable="true" android:focusable="true"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:padding="14dp">
-                    <ImageView android:layout_width="52dp" android:layout_height="52dp" android:src="@drawable/ic_dropbox" android:contentDescription="Dropbox" />
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Dropbox" android:textColor="?attr/colorOnSurface" android:textSize="16sp" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Fast file access" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" /></LinearLayout>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/dropboxConnect" android:layout_width="100dp" android:layout_height="42dp" android:text="CONNECT" android:textSize="10sp" app:cornerRadius="21dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView android:id="@+id/dropboxCard" android:layout_width="match_parent" android:layout_height="118dp" android:layout_marginTop="10dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp"><LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="14dp"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal"><ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_dropbox" android:contentDescription="Dropbox" /><LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Dropbox" android:textColor="?attr/colorOnSurface" android:textSize="15sp" android:textStyle="bold" /><TextView android:id="@+id/dropboxStorageText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="0 GB used • 0 GB free" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" /></LinearLayout><com.google.android.material.button.MaterialButton android:id="@+id/dropboxConnect" android:layout_width="92dp" android:layout_height="40dp" android:text="CONNECT" android:textSize="9sp" app:cornerRadius="20dp" /></LinearLayout><com.google.android.material.progressindicator.LinearProgressIndicator android:id="@+id/dropboxProgress" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="12dp" android:progress="0" app:trackCornerRadius="6dp" app:trackThickness="6dp" /></LinearLayout></com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent" android:layout_height="84dp" android:layout_marginTop="10dp" android:clickable="true" android:focusable="true"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:padding="14dp">
-                    <ImageView android:layout_width="52dp" android:layout_height="52dp" android:src="@drawable/ic_mega" android:contentDescription="MEGA" />
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MEGA" android:textColor="?attr/colorOnSurface" android:textSize="16sp" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Encrypted cloud storage" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" /></LinearLayout>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/megaConnect" android:layout_width="100dp" android:layout_height="42dp" android:text="CONNECT" android:textSize="10sp" app:cornerRadius="21dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView android:id="@+id/megaCard" android:layout_width="match_parent" android:layout_height="118dp" android:layout_marginTop="10dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp"><LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="14dp"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal"><ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_mega" android:contentDescription="MEGA" /><LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MEGA" android:textColor="?attr/colorOnSurface" android:textSize="15sp" android:textStyle="bold" /><TextView android:id="@+id/megaStorageText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="0 GB used • 0 GB free" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" /></LinearLayout><com.google.android.material.button.MaterialButton android:id="@+id/megaConnect" android:layout_width="92dp" android:layout_height="40dp" android:text="CONNECT" android:textSize="9sp" app:cornerRadius="20dp" /></LinearLayout><com.google.android.material.progressindicator.LinearProgressIndicator android:id="@+id/megaProgress" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="12dp" android:progress="0" app:trackCornerRadius="6dp" app:trackThickness="6dp" /></LinearLayout></com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent" android:layout_height="84dp" android:layout_marginTop="10dp" android:clickable="true" android:focusable="true"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:padding="14dp">
-                    <ImageView android:layout_width="52dp" android:layout_height="52dp" android:src="@drawable/ic_box" android:contentDescription="Box" />
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Box" android:textColor="?attr/colorOnSurface" android:textSize="16sp" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Secure business storage" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" /></LinearLayout>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/boxConnect" android:layout_width="100dp" android:layout_height="42dp" android:text="CONNECT" android:textSize="10sp" app:cornerRadius="21dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView android:id="@+id/boxCard" android:layout_width="match_parent" android:layout_height="118dp" android:layout_marginTop="10dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp"><LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="14dp"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal"><ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_box" android:contentDescription="Box" /><LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Box" android:textColor="?attr/colorOnSurface" android:textSize="15sp" android:textStyle="bold" /><TextView android:id="@+id/boxStorageText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="0 GB used • 0 GB free" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" /></LinearLayout><com.google.android.material.button.MaterialButton android:id="@+id/boxConnect" android:layout_width="92dp" android:layout_height="40dp" android:text="CONNECT" android:textSize="9sp" app:cornerRadius="20dp" /></LinearLayout><com.google.android.material.progressindicator.LinearProgressIndicator android:id="@+id/boxProgress" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="12dp" android:progress="0" app:trackCornerRadius="6dp" app:trackThickness="6dp" /></LinearLayout></com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent" android:layout_height="84dp" android:layout_marginTop="10dp" android:clickable="true" android:focusable="true"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:padding="14dp">
-                    <ImageView android:layout_width="52dp" android:layout_height="52dp" android:src="@drawable/ic_webdav" android:contentDescription="WebDAV" />
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="WebDAV" android:textColor="?attr/colorOnSurface" android:textSize="16sp" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Connect your own server" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" /></LinearLayout>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/webDavConnect" android:layout_width="100dp" android:layout_height="42dp" android:text="CONFIGURE" android:textSize="10sp" app:cornerRadius="21dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
+            <com.google.android.material.card.MaterialCardView android:id="@+id/webDavCard" android:layout_width="match_parent" android:layout_height="118dp" android:layout_marginTop="10dp" app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeColor="?attr/colorOutlineVariant" app:strokeWidth="1dp"><LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="14dp"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal"><ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_webdav" android:contentDescription="WebDAV" /><LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="WebDAV" android:textColor="?attr/colorOnSurface" android:textSize="15sp" android:textStyle="bold" /><TextView android:id="@+id/webDavStorageText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Storage depends on server" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="11sp" /></LinearLayout><com.google.android.material.button.MaterialButton android:id="@+id/webDavConnect" android:layout_width="92dp" android:layout_height="40dp" android:text="CONFIGURE" android:textSize="9sp" app:cornerRadius="20dp" /></LinearLayout><com.google.android.material.progressindicator.LinearProgressIndicator android:id="@+id/webDavProgress" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="12dp" android:progress="0" app:trackCornerRadius="6dp" app:trackThickness="6dp" /></LinearLayout></com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
