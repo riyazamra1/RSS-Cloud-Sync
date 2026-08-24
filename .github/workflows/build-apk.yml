@@ -42,5 +42,5 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      # Remote APK build requested from ChatGPT
-      # Build trigger refreshed: 2026-08-24
+      # Force a fresh remote build after the local build/version issue.
+      # 2026-08-24 remote build refresh.
