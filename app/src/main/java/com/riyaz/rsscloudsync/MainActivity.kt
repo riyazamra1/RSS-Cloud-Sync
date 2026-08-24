@@ -99,59 +99,13 @@ class MainActivity : AppCompatActivity() {
     }
     private fun setButtonsInsideCard(parent: ViewGroup?, provider: String) { if (parent == null) return; for (i in 0 until parent.childCount) when (val child = parent.getChildAt(i)) { is MaterialButton -> child.setOnClickListener { openCloud(provider) }; is ViewGroup -> setButtonsInsideCard(child, provider) } }
     private fun setupNavigation() {
-        binding.foldersCard.setOnClickListener { startActivity(Intent(this, FolderSyncActivity::class.java)) }
+        binding.foldersCard.setOnClickListener { startActivity(Intent(this, SyncSetupActivity::class.java)) }
         binding.syncSetupCard.setOnClickListener { openAutomaticSync() }
-        binding.syncNowButton.setOnClickListener { startRealSync() }
+        binding.syncNowButton.setOnClickListener { startActivity(Intent(this, SyncSetupActivity::class.java)) }
     }
 
     private fun startRealSync() {
-        if (syncExecutor.isShutdown) return
-        val sourceString = appPrefs.getString("sync_folder_uri", null)
-        val targetString = appPrefs.getString("external_storage_uri", null)
-        if (sourceString == null || targetString == null) {
-            binding.syncStatusText.text = "Sync setup needed"
-            binding.syncSubtitle.text = "Select a local folder and external storage folder first"
-            return
-        }
-        val directionName = appPrefs.getString("sync_direction", "Two-way Sync") ?: "Two-way Sync"
-        val direction = when (directionName) {
-            "Upload only" -> SyncEngine.Direction.UPLOAD_ONLY
-            "Upload mirror" -> SyncEngine.Direction.UPLOAD_MIRROR
-            "Upload then delete" -> SyncEngine.Direction.UPLOAD_THEN_DELETE
-            "Download only" -> SyncEngine.Direction.DOWNLOAD_ONLY
-            "Download mirror" -> SyncEngine.Direction.DOWNLOAD_MIRROR
-            "Download then delete" -> SyncEngine.Direction.DOWNLOAD_THEN_DELETE
-            else -> SyncEngine.Direction.TWO_WAY
-        }
-        val source = Uri.parse(sourceString)
-        val target = Uri.parse(targetString)
-        binding.syncNowButton.isEnabled = false
-        binding.syncStatusText.text = "Syncing..."
-        binding.syncSubtitle.text = "Preparing files"
-        binding.lastSyncText.text = "Sync in progress"
-        binding.gradientProgress.setProgress(0f, false)
-        syncExecutor.execute {
-            val engine = SyncEngine(contentResolver, this)
-            activeEngine = engine
-            val result = engine.sync(source, target, direction) { progress ->
-                runOnUiThread {
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    val percent = if (progress.totalFiles > 0) progress.filesProcessed * 100f / progress.totalFiles else 100f
-                    binding.gradientProgress.setProgress(percent, false)
-                    binding.syncSubtitle.text = "${progress.filesProcessed}/${progress.totalFiles} files • ${progress.filesChanged} changed"
-                    binding.lastSyncText.text = progress.currentPath
-                }
-            }
-            runOnUiThread {
-                activeEngine = null
-                binding.syncNowButton.isEnabled = true
-                when {
-                    result.cancelled -> { binding.syncStatusText.text = "Sync cancelled"; binding.syncSubtitle.text = "No further changes are being made" }
-                    result.error != null -> { binding.syncStatusText.text = "Sync failed"; binding.syncSubtitle.text = result.error ?: "Unable to sync" }
-                    else -> { binding.syncStatusText.text = "Sync complete"; binding.syncSubtitle.text = "${result.filesChanged} files changed • ${formatBytes(result.bytesTransferred)} transferred"; binding.lastSyncText.text = "Last sync: Just now"; binding.gradientProgress.setProgress(100f, true) }
-                }
-            }
-        }
+        startActivity(Intent(this, SyncSetupActivity::class.java))
     }
 
     private fun formatBytes(bytes: Long): String {
@@ -164,7 +118,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupDrawer() {
         binding.toolbar.setNavigationOnClickListener { binding.drawerLayout.openDrawer(binding.navigationView) }
         binding.navigationView.setNavigationItemSelectedListener { item ->
-            when (item.itemId) { R.id.nav_home -> binding.mainScrollView.smoothScrollTo(0, 0); R.id.nav_folders -> startActivity(Intent(this, FolderSyncActivity::class.java)); R.id.nav_automatic -> openAutomaticSync(); R.id.nav_cloud -> startActivity(Intent(this, CloudAccountsActivity::class.java)); R.id.nav_external -> startActivity(Intent(this, ExternalStorageActivity::class.java)); R.id.nav_upgrade -> startActivity(Intent(this, PremiumActivity::class.java)); R.id.nav_about -> startActivity(Intent(this, AboutActivity::class.java)); R.id.nav_contact -> startActivity(Intent(this, ContactActivity::class.java)) }
+            when (item.itemId) { R.id.nav_home -> binding.mainScrollView.smoothScrollTo(0, 0); R.id.nav_folders -> startActivity(Intent(this, SyncSetupActivity::class.java)); R.id.nav_automatic -> openAutomaticSync(); R.id.nav_cloud -> startActivity(Intent(this, CloudAccountsActivity::class.java)); R.id.nav_external -> startActivity(Intent(this, SyncSetupActivity::class.java)); R.id.nav_upgrade -> startActivity(Intent(this, PremiumActivity::class.java)); R.id.nav_about -> startActivity(Intent(this, AboutActivity::class.java)); R.id.nav_contact -> startActivity(Intent(this, ContactActivity::class.java)) }
             binding.navigationView.setCheckedItem(item.itemId); binding.drawerLayout.closeDrawers(); true
         }
     }
@@ -172,7 +126,7 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNav.selectedItemId = R.id.bottom_home
         binding.bottomNav.setOnItemSelectedListener { item -> when (item.itemId) {
             R.id.bottom_home -> { binding.mainScrollView.smoothScrollTo(0, 0); true }
-            R.id.bottom_sync -> { startActivity(Intent(this, FolderSyncActivity::class.java)); true }
+            R.id.bottom_sync -> { startActivity(Intent(this, SyncSetupActivity::class.java)); true }
             R.id.bottom_cloud -> { startActivity(Intent(this, CloudAccountsActivity::class.java)); true }
             R.id.bottom_premium -> { startActivity(Intent(this, PremiumActivity::class.java)); true }
             R.id.bottom_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
@@ -189,16 +143,12 @@ class MainActivity : AppCompatActivity() {
         binding.contentLayout.alpha = 0f; binding.contentLayout.translationY = dp(8f); binding.contentLayout.animate().alpha(1f).translationY(0f).setDuration(320).start()
         for (i in 0 until binding.cloudProviderRow.childCount) { val child = binding.cloudProviderRow.getChildAt(i); child.alpha = 0f; child.translationY = dp(8f); child.animate().alpha(1f).translationY(0f).setStartDelay((i * 45L)).setDuration(240).start() }
     }
-    private fun openAutomaticSync() { if (appPrefs.getBoolean("premium_unlocked", false)) startActivity(Intent(this, SyncSetupActivity::class.java)) else startActivity(Intent(this, PremiumActivity::class.java)) }
-    private fun openCloud(provider: String) { appPrefs.edit().putString("selected_cloud_provider", provider).apply(); startActivity(Intent(this, CloudAccountsActivity::class.java)) }
+    private fun openAutomaticSync() { startActivity(Intent(this, SyncSetupActivity::class.java)) }
+    private fun openCloud(provider: String) { appPrefs.edit().putString("selected_cloud_provider", provider).apply(); startActivity(Intent(this, SyncSetupActivity::class.java)) }
     private fun gradient(colors: IntArray, radius: Float): GradientDrawable = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors).apply { cornerRadius = radius }
     private fun solid(color: Int, radius: Float): GradientDrawable = GradientDrawable().apply { setColor(color); cornerRadius = radius }
     private fun dp(value: Float): Float = value * resources.displayMetrics.density
     private fun dpInt(value: Float): Int = dp(value).toInt()
 
-    override fun onDestroy() {
-        activeEngine?.cancel()
-        syncExecutor.shutdownNow()
-        super.onDestroy()
-    }
+    override fun onDestroy() { activeEngine?.cancel(); syncExecutor.shutdownNow(); super.onDestroy() }
 }
