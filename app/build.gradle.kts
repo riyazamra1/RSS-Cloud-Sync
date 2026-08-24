@@ -64,7 +64,7 @@ android {
             resources.pickFirsts.add("commonMain/default/linkdata/root_package/0_.knm")
             resources.pickFirsts.add("commonMain/default/linkdata/module")
             resources.pickFirsts.add("commonMain/default/linkdata/package_androidx/0_androidx.knm")
-            resources.pickFirsts.add("META-INF/kotlin-project-structure-metadata.json")
+            resources.excludes.add("META-INF/kotlin-project-structure-metadata.json")
             resources.merges.add("commonMain/default/manifest")
             resources.merges.add("nonJvmMain/default/manifest")
             resources.merges.add("nativeMain/default/manifest")
@@ -93,4 +93,5 @@ dependencies {
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.startup:startup-runtime:1.1.1")
     implementation("androidx.interpolator:interpolator:1.0.0")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 }
