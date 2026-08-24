@@ -82,7 +82,7 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
         var bytes: Long = 0
     ) {
         fun addCategory(fileName: String) {
-            when (fileCategory(fileName)) {
+            when (classifyFileName(fileName)) {
                 Category.VIDEO -> video++
                 Category.AUDIO -> audio++
                 Category.DOCUMENT -> documents++
@@ -93,11 +93,14 @@ class SyncEngine(private val resolver: ContentResolver, private val context: Con
 
     private enum class Category { VIDEO, AUDIO, DOCUMENT, OTHER }
 
-    private fun fileCategory(fileName: String): Category = when (fileName.substringAfterLast('.', "").lowercase()) {
-        "mp4", "mkv", "mov", "avi", "webm", "3gp", "m4v", "flv", "wmv", "mpeg", "mpg" -> Category.VIDEO
-        "mp3", "wav", "m4a", "aac", "flac", "ogg", "opus", "wma", "amr" -> Category.AUDIO
-        "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv", "rtf", "odt", "ods", "odp", "epub" -> Category.DOCUMENT
-        else -> Category.OTHER
+    private fun classifyFileName(fileName: String): Category {
+        val extension = fileName.substringAfterLast('.', "").lowercase()
+        return when (extension) {
+            "mp4", "mkv", "mov", "avi", "webm", "3gp", "m4v", "flv", "wmv", "mpeg", "mpg" -> Category.VIDEO
+            "mp3", "wav", "m4a", "aac", "flac", "ogg", "opus", "wma", "amr" -> Category.AUDIO
+            "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv", "rtf", "odt", "ods", "odp", "epub" -> Category.DOCUMENT
+            else -> Category.OTHER
+        }
     }
 
     private fun oneWay(sourceTree: Uri, targetTree: Uri, source: Map<String, Item>, target: Map<String, Item>, mirror: Boolean, listener: ((Progress) -> Unit)?, deleteSourceAfterCopy: Boolean, uploading: Boolean, stats: Stats) {
