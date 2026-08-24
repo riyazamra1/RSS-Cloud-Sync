@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
     <application android:name=".RssUiApplication" android:allowBackup="true" android:icon="@mipmap/ic_launcher_rss" android:roundIcon="@mipmap/ic_launcher_rss" android:label="@string/app_name" android:supportsRtl="true" android:theme="@style/SplashTheme">
         <activity android:name=".SplashActivity" android:exported="true">
             <intent-filter>
@@ -9,6 +10,7 @@
         </activity>
         <activity android:name=".MainActivity" android:exported="false" />
         <activity android:name=".SyncSetupActivity" android:exported="false" />
+        <activity android:name=".GoogleDriveFolderPickerActivity" android:exported="false" />
         <activity android:name=".FolderSyncActivity" android:exported="false" />
         <activity android:name=".ExternalStorageActivity" android:exported="false" />
         <activity android:name=".AboutActivity" android:exported="false" />
