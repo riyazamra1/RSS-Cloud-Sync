@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.material.appbar.MaterialToolbar
@@ -20,36 +21,36 @@ class GoogleDriveFolderPickerActivity : Activity() {
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
-
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(18.dp(), 0, 18.dp(), 18.dp())
         }
-
         val toolbar = MaterialToolbar(this).apply {
             title = "Google Drive"
             setNavigationIcon(android.R.drawable.ic_menu_revert)
             setNavigationOnClickListener { goBack() }
         }
         root.addView(toolbar, LinearLayout.LayoutParams(-1, 58.dp()))
-
         title = TextView(this).apply {
             textSize = 13f
             setPadding(4.dp(), 12.dp(), 4.dp(), 8.dp())
         }
         root.addView(title)
-
         val select = MaterialButton(this).apply {
             text = "USE THIS FOLDER"
             setOnClickListener { choose() }
         }
         root.addView(select, LinearLayout.LayoutParams(-1, 50.dp()))
-
+        val scroll = ScrollView(this).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = true
+        }
         list = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
+            setPadding(0, 6.dp(), 0, 18.dp())
         }
-        root.addView(list, LinearLayout.LayoutParams(-1, 0, 1f))
-
+        scroll.addView(list, ScrollView.LayoutParams(-1, -2))
+        root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         setContentView(root)
         load(currentId, "My Drive")
     }
@@ -59,11 +60,10 @@ class GoogleDriveFolderPickerActivity : Activity() {
         title.text = label
         list.removeAllViews()
         list.addView(ProgressBar(this), LinearLayout.LayoutParams(-1, 48.dp()))
-
         executor.execute {
             try {
-                val entries = DriveClient(this).listChildren(id)
-                val folders = entries.filter { it.mimeType == DriveClient.FOLDER_MIME }
+                val folders = DriveClient(this).listChildren(id)
+                    .filter { it.mimeType == DriveClient.FOLDER_MIME }
                 runOnUiThread {
                     list.removeAllViews()
                     if (folders.isEmpty()) {
@@ -83,42 +83,30 @@ class GoogleDriveFolderPickerActivity : Activity() {
                                     load(folder.id, folder.name)
                                 }
                             }
-                            list.addView(
-                                button,
-                                LinearLayout.LayoutParams(-1, 50.dp()).apply { topMargin = 6.dp() }
-                            )
+                            list.addView(button, LinearLayout.LayoutParams(-1, 50.dp()).apply {
+                                topMargin = 6.dp()
+                            })
                         }
                     }
                 }
             } catch (e: Exception) {
                 runOnUiThread {
                     list.removeAllViews()
-                    Toast.makeText(
-                        this,
-                        e.message ?: "Unable to load Google Drive folders",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(this, e.message ?: "Unable to load Google Drive folders", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
 
     private fun goBack() {
-        if (parents.isEmpty()) {
-            finish()
-            return
+        if (parents.isEmpty()) finish() else {
+            val (id, label) = parents.removeLast()
+            load(id, label)
         }
-        val (id, label) = parents.removeLast()
-        load(id, label)
     }
 
     private fun choose() {
-        setResult(
-            RESULT_OK,
-            intent
-                .putExtra("folder_id", currentId)
-                .putExtra("folder_name", title.text.toString())
-        )
+        setResult(RESULT_OK, intent.putExtra("folder_id", currentId).putExtra("folder_name", title.text.toString()))
         finish()
     }
 
