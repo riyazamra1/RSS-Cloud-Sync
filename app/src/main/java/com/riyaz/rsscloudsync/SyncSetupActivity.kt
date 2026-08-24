@@ -15,76 +15,47 @@ class SyncSetupActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySyncSetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Sync Setup"
-
         setupCloudProvider()
         setupSyncDirection()
         setupSchedule()
         loadSelectedFolder()
-
         binding.saveSyncButton.setOnClickListener { saveSyncConfiguration() }
     }
 
     private fun setupCloudProvider() {
-        val providers = arrayOf(
-            "Google Drive",
-            "OneDrive",
-            "Dropbox",
-            "MEGA",
-            "Box",
-            "pCloud",
-            "WebDAV",
-            "NAS / SMB"
-        )
-        binding.cloudProviderSpinner.adapter = spinnerAdapter(providers)
+        binding.cloudProviderSpinner.adapter = spinnerAdapter(arrayOf(
+            "Google Drive", "OneDrive", "Dropbox", "MEGA", "Box", "pCloud", "WebDAV", "NAS / SMB"
+        ))
     }
 
     private fun setupSyncDirection() {
-        val directions = arrayOf(
-            "Two-way Sync",
-            "Upload only",
-            "Upload mirror",
-            "Upload then delete",
-            "Download only",
-            "Download mirror",
-            "Download then delete"
-        )
-        binding.syncDirectionSpinner.adapter = spinnerAdapter(directions)
+        binding.syncDirectionSpinner.adapter = spinnerAdapter(arrayOf(
+            "Two-way Sync", "Upload only", "Upload mirror", "Upload then delete",
+            "Download only", "Download mirror", "Download then delete"
+        ))
     }
 
     private fun setupSchedule() {
-        val schedules = arrayOf(
-            "Manual",
-            "Every 15 minutes",
-            "Every 30 minutes",
-            "Every 1 hour",
-            "Every 6 hours",
-            "Every 12 hours",
-            "Daily"
-        )
-        binding.scheduleSpinner.adapter = spinnerAdapter(schedules)
+        binding.scheduleSpinner.adapter = spinnerAdapter(arrayOf(
+            "Manual", "Every 15 minutes", "Every 30 minutes", "Every 1 hour",
+            "Every 6 hours", "Every 12 hours", "Daily"
+        ))
     }
 
-    private fun spinnerAdapter(items: Array<String>): ArrayAdapter<String> {
-        return ArrayAdapter(this, android.R.layout.simple_spinner_item, items).apply {
+    private fun spinnerAdapter(items: Array<String>): ArrayAdapter<String> =
+        ArrayAdapter(this, android.R.layout.simple_spinner_item, items).apply {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
-    }
 
     private fun loadSelectedFolder() {
         val savedUri = preferences.getString("sync_folder_uri", null)
         binding.localFolderText.text = savedUri ?: "No local folder selected"
-
-        val savedProvider = preferences.getString("cloud_provider", null)
-        val savedDirection = preferences.getString("sync_direction", null)
-        val savedSchedule = preferences.getString("sync_schedule", null)
-
-        savedProvider?.let { selectSpinnerValue(binding.cloudProviderSpinner, it) }
-        savedDirection?.let { selectSpinnerValue(binding.syncDirectionSpinner, it) }
-        savedSchedule?.let { selectSpinnerValue(binding.scheduleSpinner, it) }
+        preferences.getString("cloud_provider", null)?.let { selectSpinnerValue(binding.cloudProviderSpinner, it) }
+        preferences.getString("sync_direction", null)?.let { selectSpinnerValue(binding.syncDirectionSpinner, it) }
+        preferences.getString("sync_schedule", null)?.let { selectSpinnerValue(binding.scheduleSpinner, it) }
     }
 
     private fun selectSpinnerValue(spinner: android.widget.Spinner, value: String) {
@@ -97,8 +68,7 @@ class SyncSetupActivity : AppCompatActivity() {
     }
 
     private fun saveSyncConfiguration() {
-        val localFolder = preferences.getString("sync_folder_uri", null)
-        if (localFolder == null) {
+        if (preferences.getString("sync_folder_uri", null) == null) {
             Toast.makeText(this, "Please select a local folder first", Toast.LENGTH_SHORT).show()
             return
         }
@@ -108,10 +78,7 @@ class SyncSetupActivity : AppCompatActivity() {
         val schedule = binding.scheduleSpinner.selectedItem.toString()
         val premium = preferences.getBoolean("premium_unlocked", false)
 
-        val premiumDirection = syncDirection != "Two-way Sync"
-        val premiumSchedule = schedule != "Manual"
-
-        if (!premium && (premiumDirection || premiumSchedule)) {
+        if (!premium && (syncDirection != "Two-way Sync" || schedule != "Manual")) {
             AlertDialog.Builder(this)
                 .setTitle("Premium feature")
                 .setMessage("FREE includes only Two-way Sync and Manual Sync. Upgrade to PREMIUM to use this sync direction or automatic schedule.")
@@ -122,8 +89,7 @@ class SyncSetupActivity : AppCompatActivity() {
                         .setMessage("Unlock all 7 sync directions, automatic scheduling, multiple folder pairs, advanced filtering and no ads.")
                         .setPositiveButton("OK", null)
                         .show()
-                }
-                .show()
+                }.show()
             return
         }
 
@@ -134,6 +100,7 @@ class SyncSetupActivity : AppCompatActivity() {
             .putBoolean("sync_configuration_saved", true)
             .apply()
 
+        SyncScheduler.schedule(this, schedule)
         Toast.makeText(this, "Sync configuration saved", Toast.LENGTH_SHORT).show()
         setResult(RESULT_OK)
         finish()
