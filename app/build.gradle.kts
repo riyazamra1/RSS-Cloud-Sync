@@ -33,8 +33,8 @@ android {
         applicationId = "com.riyaz.rsscloudsync"
         minSdk = 21
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.5"
+        versionCode = 6
+        versionName = "1.6"
         vectorDrawables { useSupportLibrary = true }
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
@@ -60,4 +60,5 @@ dependencies {
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.startup:startup-runtime:1.1.1")
     implementation("androidx.interpolator:interpolator:1.0.0")
+    implementation("com.google.android.gms:play-services-auth:21.4.0")
 }
