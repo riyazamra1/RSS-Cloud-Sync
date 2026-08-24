@@ -17,6 +17,9 @@ val hasValidSigningProps = keystorePropsFile.exists().also { exists ->
 android {
     namespace = "com.riyaz.rsscloudsync"
     compileSdk = 36
+    buildFeatures {
+        buildConfig = true
+    }
     lint { checkReleaseBuilds = false }
     signingConfigs {
         if (hasValidSigningProps) {
