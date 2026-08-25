@@ -20,6 +20,7 @@ class SyncSetupActivity : AppCompatActivity() {
     private var activeDriveEngine: GoogleDriveSyncEngine? = null
     private var selectingTarget = false
     private var accountProviders = emptyList<String>()
+    private var pairId: String? = null
 
     private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri == null) return@registerForActivityResult
@@ -45,6 +46,14 @@ class SyncSetupActivity : AppCompatActivity() {
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
+        pairId = intent.getStringExtra("pair_id")
+        val newPair = intent.getBooleanExtra("new_pair", false)
+        if (pairId == null && !newPair) {
+            startActivity(Intent(this, SyncPairsActivity::class.java))
+            finish()
+            return
+        }
+        if (pairId != null) SyncPairStore.load(prefs, pairId!!)
         binding = ActivitySyncSetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
@@ -73,7 +82,8 @@ class SyncSetupActivity : AppCompatActivity() {
         }
         if (accounts.isEmpty()) accounts += "No connected cloud accounts"
         binding.cloudProviderSpinner.adapter = spinnerAdapter(accounts.toTypedArray())
-        binding.cloudProviderSpinner.setSelection(0)
+        val savedProvider = prefs.getString("selected_cloud_provider", null)
+        if (!savedProvider.isNullOrBlank()) accountProviders.indexOf(savedProvider).takeIf { it >= 0 }?.let { binding.cloudProviderSpinner.setSelection(it) }
         binding.cloudProviderSpinner.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) { loadFolders() }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
@@ -105,11 +115,13 @@ class SyncSetupActivity : AppCompatActivity() {
     }
     private fun savePair() {
         prefs.edit().putString("folder_pair_name", binding.folderPairNameEditText.text?.toString()?.trim().orEmpty().ifBlank { "My Folder Pair" })
+            .putString("selected_cloud_provider", selectedProvider() ?: "")
             .putString("sync_direction", binding.syncDirectionSpinner.selectedItem.toString())
             .putBoolean("folder_pair_enabled", binding.folderPairEnabledSwitch.isChecked)
             .putBoolean("exclude_hidden_files", binding.excludeHiddenFilesCheckBox.isChecked)
             .putBoolean("exclude_subfolders", binding.excludeSubfoldersCheckBox.isChecked)
             .putBoolean("delete_empty_subfolders", binding.deleteEmptySubfoldersCheckBox.isChecked).apply()
+        pairId = SyncPairStore.saveCurrent(prefs, pairId)
     }
     private fun loadFolders() {
         val files = prefs.getStringSet("selected_local_files", emptySet()) ?: emptySet(); val folder = prefs.getString("sync_folder_uri", null)
