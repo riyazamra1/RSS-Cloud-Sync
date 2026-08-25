@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/bottom_home" android:icon="@drawable/ic_home" android:title="Home" />
-    <item android:id="@+id/bottom_sync" android:icon="@drawable/ic_bottom_sync" android:title="Sync" />
-    <item android:id="@+id/bottom_cloud" android:icon="@drawable/ic_bottom_cloud" android:title="Cloud" />
-    <item android:id="@+id/bottom_premium" android:icon="@drawable/ic_bottom_premium" android:title="Premium" />
+    <item android:id="@+id/bottom_sync" android:icon="@drawable/ic_folder" android:title="Files" />
+    <item android:id="@+id/bottom_history" android:icon="@drawable/ic_drawer_info" android:title="Activity" />
     <item android:id="@+id/bottom_settings" android:icon="@drawable/ic_bottom_settings" android:title="Settings" />
 </menu>
