@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.riyaz.rsscloudsync.databinding.ActivityCloudAccountsBinding
@@ -28,7 +29,7 @@ class CloudAccountsActivity : AppCompatActivity() {
         } catch (e: ApiException) {
             val detail = when (e.statusCode) {
                 CommonStatusCodes.DEVELOPER_ERROR -> "OAuth configuration error (DEVELOPER_ERROR). Check package name and SHA-1 in Google Cloud Console."
-                CommonStatusCodes.SIGN_IN_CANCELLED -> "Google Drive sign-in cancelled."
+                GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> "Google Drive sign-in cancelled."
                 CommonStatusCodes.NETWORK_ERROR -> "Network error. Check your internet connection."
                 else -> "Google Drive sign-in failed (${e.statusCode})."
             }
