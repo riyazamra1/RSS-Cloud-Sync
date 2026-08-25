@@ -10,8 +10,10 @@
         <item android:id="@+id/nav_usage" android:icon="@drawable/ic_drawer_storage" android:title="Storage Usage" />
     </group>
     <group android:id="@+id/drawer_support">
-        <item android:id="@+id/nav_upgrade" android:icon="@drawable/ic_drawer_premium" android:title="Go Premium" />
         <item android:id="@+id/nav_help" android:icon="@drawable/ic_drawer_contact" android:title="Help &amp; Support" />
         <item android:id="@+id/nav_about" android:icon="@drawable/ic_drawer_info" android:title="About" />
+    </group>
+    <group android:id="@+id/drawer_upgrade_group">
+        <item android:id="@+id/nav_upgrade" android:icon="@drawable/ic_drawer_premium" android:title="Go Premium" />
     </group>
 </menu>
