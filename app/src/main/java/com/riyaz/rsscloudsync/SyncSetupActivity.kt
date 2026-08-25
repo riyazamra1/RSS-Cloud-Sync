@@ -48,7 +48,7 @@ class SyncSetupActivity : AppCompatActivity() {
 
     private val driveFolderPicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode != RESULT_OK || result.data == null) return@registerForActivityResult
-        val id = result.data?.getStringExtra("folder_id") ?: return@registerForActivityResult
+        val id = result.data?.getStringExtra("folder_id") ?: return@registerActivityResult
         val name = result.data?.getStringExtra("folder_name") ?: "My Drive"
         prefs.edit().putString("google_drive_target_folder_id", id).putString("google_drive_target_folder_name", name).apply()
         loadFolders()
@@ -167,6 +167,7 @@ class SyncSetupActivity : AppCompatActivity() {
     private fun startSync() {
         val provider = binding.cloudProviderSpinner.selectedItem?.toString() ?: "External storage"
         val directionName = binding.syncDirectionSpinner.selectedItem.toString()
+        prefs.edit().putString("sync_direction", directionName).putString("cloud_provider", provider).apply()
         if (provider == "Google Drive") { startGoogleDriveSync(directionName); return }
         val source = prefs.getString("sync_folder_uri", null)
         val target = prefs.getString("external_storage_uri", null)
@@ -180,10 +181,6 @@ class SyncSetupActivity : AppCompatActivity() {
         val files = (prefs.getStringSet("selected_local_files", emptySet()) ?: emptySet()).map(Uri::parse)
         if (folderId == null) { Toast.makeText(this, "Select a Google Drive target folder", Toast.LENGTH_SHORT).show(); return }
         if (localFolder == null && files.isEmpty()) { Toast.makeText(this, "Select a local folder or individual files", Toast.LENGTH_SHORT).show(); return }
-        if (directionName == "Upload mirror" || directionName == "Upload then delete" || directionName == "Download mirror" || directionName == "Download then delete") {
-            Toast.makeText(this, "This transfer mode will be enabled in the next cloud-sync phase", Toast.LENGTH_SHORT).show()
-            return
-        }
 
         binding.syncNowButton.text = "CANCEL SYNC"
         binding.syncNowButton.isEnabled = true
@@ -194,16 +191,23 @@ class SyncSetupActivity : AppCompatActivity() {
                 val engine = GoogleDriveSyncEngine(this, contentResolver)
                 activeDriveEngine = engine
                 val result = if (files.isNotEmpty()) {
+                    if (directionName != "Upload only" && directionName != "Upload mirror" && directionName != "Upload then delete") {
+                        throw IllegalStateException("Individual file selection currently supports upload modes only")
+                    }
                     engine.uploadSelectedFiles(files, folderId) { p -> updateDriveProgress(p) }
                 } else {
                     val dir = when (directionName) {
+                        "Upload only" -> GoogleDriveSyncEngine.Direction.UPLOAD_ONLY
+                        "Upload mirror" -> GoogleDriveSyncEngine.Direction.UPLOAD_MIRROR
+                        "Upload then delete" -> GoogleDriveSyncEngine.Direction.UPLOAD_THEN_DELETE
                         "Download only" -> GoogleDriveSyncEngine.Direction.DOWNLOAD_ONLY
-                        "Two-way Sync" -> GoogleDriveSyncEngine.Direction.TWO_WAY
-                        else -> GoogleDriveSyncEngine.Direction.UPLOAD_ONLY
+                        "Download mirror" -> GoogleDriveSyncEngine.Direction.DOWNLOAD_MIRROR
+                        "Download then delete" -> GoogleDriveSyncEngine.Direction.DOWNLOAD_THEN_DELETE
+                        else -> GoogleDriveSyncEngine.Direction.TWO_WAY
                     }
                     engine.sync(Uri.parse(localFolder!!), folderId, dir) { p -> updateDriveProgress(p) }
                 }
-                val success = result.failed == 0 && !engineCancelled(engine)
+                val success = result.failed == 0 && !engine.isCancelled()
                 SyncHistoryManager.add(this, SyncHistoryManager.Entry(
                     timestamp = System.currentTimeMillis(),
                     direction = directionName.uppercase(Locale.US).replace(' ', '_'),
@@ -237,8 +241,6 @@ class SyncSetupActivity : AppCompatActivity() {
             }
         }
     }
-
-    private fun engineCancelled(engine: GoogleDriveSyncEngine): Boolean = false
 
     private fun updateDriveProgress(progress: GoogleDriveSyncEngine.Progress) {
         runOnUiThread {
