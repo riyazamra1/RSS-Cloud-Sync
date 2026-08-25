@@ -84,49 +84,28 @@ class MainActivity : AppCompatActivity() {
             button.setTextColor(if (selected) selectedText else unselectedText)
         }
         binding.bottomNav.setBackgroundColor(surface); binding.bottomNav.elevation = dp(12f); binding.bottomNav.translationZ = dp(3f)
-        tintNavigationIcons(); tintCloudIcons()
+        tintNavigationIcons()
     }
 
     private fun applyReferenceUi() {
         binding.toolbar.title = "RSS CLOUD SYNC"
         binding.cloudStorageSubtitle.text = "CLOUD ACCOUNTS"
         binding.cloudSwipeHint.text = "Manage  ›"
-        binding.syncStatusText.text = if (binding.syncStatusText.text.isBlank()) "Ready to sync" else binding.syncStatusText.text
         binding.syncNowButton.text = "↻  SYNC NOW"
-        (binding.premiumBanner.layoutParams as? ViewGroup.LayoutParams)?.let { it.height = dpInt(190f); binding.premiumBanner.layoutParams = it }
-        (binding.syncStatusCard.layoutParams as? ViewGroup.LayoutParams)?.let { it.height = dpInt(214f); binding.syncStatusCard.layoutParams = it }
-        (binding.bottomNav.layoutParams as? ViewGroup.LayoutParams)?.let { it.height = dpInt(70f); binding.bottomNav.layoutParams = it }
+        binding.premiumBanner.layoutParams = binding.premiumBanner.layoutParams.apply { height = dpInt(190f) }
+        binding.syncStatusCard.layoutParams = binding.syncStatusCard.layoutParams.apply { height = dpInt(214f) }
+        binding.bottomNav.layoutParams = binding.bottomNav.layoutParams.apply { height = dpInt(70f) }
         for (i in 0 until binding.cloudProviderRow.childCount) {
             val card = binding.cloudProviderRow.getChildAt(i)
-            (card.layoutParams as? ViewGroup.MarginLayoutParams)?.let { it.width = dpInt(142f); it.height = dpInt(158f); card.layoutParams = it }
+            card.layoutParams = card.layoutParams.apply { width = dpInt(142f); height = dpInt(158f) }
         }
     }
 
     private fun tintNavigationIcons() {
         val drawerColors = intArrayOf(0xFF6C3FEA.toInt(), 0xFF4D8DFF.toInt(), 0xFF2DC9A3.toInt(), 0xFF38A6F2.toInt(), 0xFFFF9F43.toInt(), 0xFFFFC83D.toInt(), 0xFF8B5CF6.toInt(), 0xFF2AB7C9.toInt())
-        binding.navigationView.menu.forEachIndexed { index, item -> item.icon?.let { DrawableCompat.setTint(it, drawerColors[index % drawerColors.size]) } }
+        for (i in 0 until binding.navigationView.menu.size()) binding.navigationView.menu.getItem(i).icon?.let { DrawableCompat.setTint(it, drawerColors[i % drawerColors.size]) }
         val bottomColors = intArrayOf(0xFF7C4DFF.toInt(), 0xFF3F83F8.toInt(), 0xFF22B8CF.toInt(), 0xFFFFB020.toInt(), 0xFF6875F5.toInt())
-        binding.bottomNav.menu.forEachIndexed { index, item -> item.icon?.let { DrawableCompat.setTint(it, bottomColors[index % bottomColors.size]) } }
-    }
-
-    private fun tintCloudIcons() {
-        val colors = intArrayOf(0xFF4285F4.toInt(), 0xFF2563EB.toInt(), 0xFF0061FF.toInt(), 0xFFD9008D.toInt(), 0xFF1677FF.toInt(), 0xFF6B7280.toInt())
-        for (i in 0 until binding.cloudProviderRow.childCount) {
-            val card = binding.cloudProviderRow.getChildAt(i) as? ViewGroup ?: continue
-            val image = findFirstImage(card) ?: continue
-            image.imageTintList = null
-            image.alpha = 1f
-            image.tag = colors[i % colors.size]
-        }
-    }
-
-    private fun findFirstImage(parent: ViewGroup): ImageView? {
-        for (i in 0 until parent.childCount) {
-            val child = parent.getChildAt(i)
-            if (child is ImageView) return child
-            if (child is ViewGroup) findFirstImage(child)?.let { return it }
-        }
-        return null
+        for (i in 0 until binding.bottomNav.menu.size()) binding.bottomNav.menu.getItem(i).icon?.let { DrawableCompat.setTint(it, bottomColors[i % bottomColors.size]) }
     }
 
     private fun applyTextTheme(parent: ViewGroup, primary: Int, secondary: Int) {
@@ -159,11 +138,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun setButtonsInsideCard(parent: ViewGroup?, provider: String) {
         if (parent == null) return
-        for (i in 0 until parent.childCount) {
-            when (val child = parent.getChildAt(i)) {
-                is MaterialButton -> child.setOnClickListener { if (provider == "Google Drive") startActivity(Intent(this, CloudAccountsActivity::class.java)) else openCloud(provider) }
-                is ViewGroup -> setButtonsInsideCard(child, provider)
-            }
+        for (i in 0 until parent.childCount) when (val child = parent.getChildAt(i)) {
+            is MaterialButton -> child.setOnClickListener { if (provider == "Google Drive") startActivity(Intent(this, CloudAccountsActivity::class.java)) else openCloud(provider) }
+            is ViewGroup -> setButtonsInsideCard(child, provider)
         }
     }
 
@@ -192,7 +169,6 @@ class MainActivity : AppCompatActivity() {
     private fun ViewGroup.findButton(): MaterialButton? { for (i in 0 until childCount) { val child = getChildAt(i); if (child is MaterialButton) return child; if (child is ViewGroup) child.findButton()?.let { return it } }; return null }
     private fun formatDate(timestamp: Long): String = java.text.SimpleDateFormat("dd MMM, HH:mm", java.util.Locale.getDefault()).format(java.util.Date(timestamp))
     private fun formatBytes(bytes: Long): String { if (bytes < 1024L) return "$bytes B"; if (bytes < 1024L * 1024L) return String.format(java.util.Locale.getDefault(), "%.1f KB", bytes / 1024.0); if (bytes < 1024L * 1024L * 1024L) return String.format(java.util.Locale.getDefault(), "%.1f MB", bytes / (1024.0 * 1024.0)); if (bytes < 1024L * 1024L * 1024L * 1024L) return String.format(java.util.Locale.getDefault(), "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0)); return String.format(java.util.Locale.getDefault(), "%.2f TB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0)) }
-
     private fun setupNavigation() { binding.foldersCard.setOnClickListener { startActivity(Intent(this, SyncSetupActivity::class.java)) }; binding.syncSetupCard.setOnClickListener { openAutomaticSync() }; binding.syncNowButton.setOnClickListener { startActivity(Intent(this, SyncSetupActivity::class.java)) } }
 
     private fun setupDrawer() {
@@ -214,22 +190,24 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupBottomNavigation() {
         binding.bottomNav.selectedItemId = R.id.bottom_home
-        binding.bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.bottom_home -> { binding.mainScrollView.smoothScrollTo(0, 0); true }
-                R.id.bottom_sync -> { startActivity(Intent(this, SyncSetupActivity::class.java)); true }
-                R.id.bottom_cloud -> { startActivity(Intent(this, CloudAccountsActivity::class.java)); true }
-                R.id.bottom_premium -> { startActivity(Intent(this, PremiumActivity::class.java)); true }
-                R.id.bottom_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
-                else -> false
-            }
-        }
+        binding.bottomNav.setOnItemSelectedListener { item -> when (item.itemId) {
+            R.id.bottom_home -> { binding.mainScrollView.smoothScrollTo(0, 0); true }
+            R.id.bottom_sync -> { startActivity(Intent(this, SyncSetupActivity::class.java)); true }
+            R.id.bottom_cloud -> { startActivity(Intent(this, CloudAccountsActivity::class.java)); true }
+            R.id.bottom_premium -> { startActivity(Intent(this, PremiumActivity::class.java)); true }
+            R.id.bottom_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
+            else -> false
+        } }
     }
 
     private fun setupBannerSlider() {
         binding.bannerTitle.text = bannerTitles[0]; binding.bannerSubtitle.text = bannerSubtitles[0]
         binding.premiumBanner.setOnClickListener { if (bannerPage == 1) startActivity(Intent(this, PremiumActivity::class.java)) }
-        binding.premiumBanner.setOnTouchListener { _, event -> when (event.actionMasked) { MotionEvent.ACTION_DOWN -> { bannerDownX = event.x; false }; MotionEvent.ACTION_UP -> { val distance = event.x - bannerDownX; if (kotlin.math.abs(distance) > dp(45f)) { bannerPage = if (distance < 0) (bannerPage + 1) % bannerTitles.size else (bannerPage - 1 + bannerTitles.size) % bannerTitles.size; updateBanner(); true } else false }; else -> false } }
+        binding.premiumBanner.setOnTouchListener { _, event -> when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> { bannerDownX = event.x; false }
+            MotionEvent.ACTION_UP -> { val distance = event.x - bannerDownX; if (kotlin.math.abs(distance) > dp(45f)) { bannerPage = if (distance < 0) (bannerPage + 1) % bannerTitles.size else (bannerPage - 1 + bannerTitles.size) % bannerTitles.size; updateBanner(); true } else false }
+            else -> false
+        } }
     }
 
     private fun updateBanner() { binding.bannerTitle.text = bannerTitles[bannerPage]; binding.bannerSubtitle.text = bannerSubtitles[bannerPage]; binding.bannerLogo.alpha = 1f; binding.bannerTitle.animate().alpha(0f).setDuration(90).withEndAction { binding.bannerTitle.animate().alpha(1f).setDuration(180).start() }.start() }
