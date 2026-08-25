@@ -53,7 +53,7 @@ class GoogleDriveFolderPickerActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setPadding(0, 6.dp(), 0, 24.dp())
         }
-        scroll.addView(list, ScrollView.LayoutParams(-1, -2))
+        scroll.addView(list, LinearLayout.LayoutParams(-1, -2))
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         setContentView(root)
         load(currentId, "My Drive")
