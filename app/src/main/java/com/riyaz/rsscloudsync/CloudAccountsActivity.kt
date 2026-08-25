@@ -73,10 +73,8 @@ class CloudAccountsActivity : AppCompatActivity() {
             setTextColor(Color.WHITE)
             cornerRadius = dp(24)
             setPadding(dp(18), 0, dp(18), 0)
-            setBackgroundColor(Color.TRANSPARENT)
             background = android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(Color.rgb(124,61,237), Color.rgb(38,181,235))).apply { cornerRadius = dp(24).toFloat() }
             setOnClickListener { binding.googleDriveConnect.performClick() }
-            tag = "empty_cloud_add"
         }
         val params = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(50)).apply { topMargin = dp(12); bottomMargin = dp(2) }
         content.addView(button, 2, params)
@@ -96,9 +94,8 @@ class CloudAccountsActivity : AppCompatActivity() {
         prefs.edit().putString("selected_cloud_provider", GoogleDriveAuthManager.PROVIDER).apply()
         val client = GoogleDriveAuthManager.signInClient(this)
         val connected = prefs.getStringSet("connected_cloud_providers", emptySet())?.contains(GoogleDriveAuthManager.PROVIDER) == true
-        if (connected) {
-            client.signOut().addOnCompleteListener { clearGoogleAccountState(); googleSignInLauncher.launch(GoogleDriveAuthManager.signInClient(this).signInIntent) }
-        } else googleSignInLauncher.launch(client.signInIntent)
+        if (connected) client.signOut().addOnCompleteListener { clearGoogleAccountState(); googleSignInLauncher.launch(GoogleDriveAuthManager.signInClient(this).signInIntent) }
+        else googleSignInLauncher.launch(client.signInIntent)
     }
 
     private fun clearGoogleAccountState() { prefs.edit().remove("google_drive_account_email").remove("google_drive_account_name").remove("google_drive_target_folder_id").remove("google_drive_target_folder_name").apply() }
@@ -130,7 +127,7 @@ class CloudAccountsActivity : AppCompatActivity() {
     }
 
     private fun loadGoogleQuota() {
-        val connected = prefs.getStringSet("connected_cloud_providers", emptySet())?.contains(GoogleSignIn.PROVIDER) == true
+        val connected = prefs.getStringSet("connected_cloud_providers", emptySet())?.contains(GoogleDriveAuthManager.PROVIDER) == true
         if (!connected) return
         binding.googleDriveStorageText.text = "Loading Google Drive storage..."
         executor.execute { try { val quota = DriveClient(this).quotaText(); runOnUiThread { if (!isFinishing) binding.googleDriveStorageText.text = quota } } catch (_: Exception) { runOnUiThread { if (!isFinishing) binding.googleDriveStorageText.text = "Connected • quota unavailable" } } }
