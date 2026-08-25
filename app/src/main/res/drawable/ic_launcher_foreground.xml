@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="240"
-    android:viewportHeight="240">
-    <group android:pivotX="120" android:pivotY="120" android:scaleX="0.62" android:scaleY="0.62">
-        <path android:fillColor="#48D7FF" android:pathData="M72,128A42,42 0,0 1,83 48A45,45 0,0 1,166 72A39,39 0,0 1,174 148H72A32,32 0,0 1,72 84A35,35 0,0 1,72 128Z" />
-        <path android:fillColor="#FFFFFF" android:pathData="M82,91L105,91L105,115L82,115Z" />
-        <path android:fillColor="#FFFFFF" android:pathData="M111,91L134,91L134,115L111,115Z" />
-        <path android:fillColor="#FFFFFF" android:pathData="M140,91L163,91L163,115L140,115Z" />
-        <path android:fillColor="#43D6A2" android:pathData="M82,128L158,128L158,138L82,138Z" />
-        <path android:fillColor="#FFD34E" android:pathData="M91,66L101,66L101,82L91,82Z" />
-        <path android:fillColor="#FFD34E" android:pathData="M119,60L129,60L129,82L119,82Z" />
-        <path android:fillColor="#FFD34E" android:pathData="M147,66L157,66L157,82L147,82Z" />
-    </group>
-</vector>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="66dp" android:height="66dp" android:gravity="center">
+        <bitmap android:src="@drawable/rss_cloud_sync_logo" android:gravity="fill" />
+    </item>
+</layer-list>
