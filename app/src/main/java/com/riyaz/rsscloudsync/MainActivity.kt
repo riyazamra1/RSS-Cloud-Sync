@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         setupDrawer()
         setupBottomNavigation()
         applyAppearance()
+        compactDashboard()
         refreshDashboard()
     }
 
@@ -45,6 +46,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         if (::binding.isInitialized) {
             applyAppearance()
+            compactDashboard()
             refreshDashboard()
         }
     }
@@ -96,7 +98,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupNavigation() {
-        binding.upgradeBannerButton.setOnClickListener { openPremium() }
+        binding.premiumBanner.setOnClickListener { openPremium() }
         binding.foldersCard.setOnClickListener { startActivity(Intent(this, SyncPairsActivity::class.java)) }
         binding.syncSetupCard.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         binding.syncNowButton.setOnClickListener { startActivity(Intent(this, SyncPairsActivity::class.java)) }
@@ -122,6 +124,10 @@ class MainActivity : AppCompatActivity() {
             binding.drawerLayout.closeDrawers()
             true
         }
+        binding.navigationView.layoutParams = binding.navigationView.layoutParams.apply { width = dp(248) }
+        binding.navigationView.setItemVerticalPadding(dp(3))
+        binding.navigationView.setItemHorizontalPadding(dp(11))
+        binding.navigationView.setItemIconPadding(dp(10))
     }
 
     private fun openPremium() {
@@ -137,6 +143,23 @@ class MainActivity : AppCompatActivity() {
                 R.id.bottom_history -> { startActivity(Intent(this, HistoryActivity::class.java)); true }
                 R.id.bottom_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
                 else -> false
+            }
+        }
+    }
+
+    private fun compactDashboard() {
+        if (!::binding.isInitialized) return
+        val density = resources.displayMetrics.density
+        val compactTop = (6 * density).toInt()
+        for (i in 1 until binding.contentLayout.childCount) {
+            val child = binding.contentLayout.getChildAt(i)
+            val lp = child.layoutParams as? ViewGroup.MarginLayoutParams ?: continue
+            if (lp.topMargin > compactTop) {
+                lp.topMargin = when (i) {
+                    1 -> 0
+                    else -> compactTop
+                }
+                child.layoutParams = lp
             }
         }
     }
@@ -227,6 +250,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun gradient(colors: IntArray, radius: Float) = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors).apply { cornerRadius = radius * resources.displayMetrics.density }
     private fun solid(color: Int, radius: Float) = GradientDrawable().apply { setColor(color); cornerRadius = radius * resources.displayMetrics.density }
+    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 
     override fun onDestroy() { executor.shutdownNow(); super.onDestroy() }
 }
