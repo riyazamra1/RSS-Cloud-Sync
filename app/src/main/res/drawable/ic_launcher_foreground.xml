@@ -1,18 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="240"
+    android:viewportHeight="240">
 
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Keep the RSS Cloud Sync mark inside Android's adaptive-icon safe zone. -->
+    <group
+        android:pivotX="120"
+        android:pivotY="120"
+        android:scaleX="0.48"
+        android:scaleY="0.48">
 
-    <item
-        android:left="18dp"
-        android:top="18dp"
-        android:right="18dp"
-        android:bottom="18dp">
+        <path
+            android:fillColor="#48D7FF"
+            android:pathData="M72,128A42,42 0,0 1,83 48A45,45 0,0 1,166 72A39,39 0,0 1,174 148H72A32,32 0,0 1,72 84A35,35 0,0 1,72 128Z" />
 
-        <bitmap
-            android:src="@drawable/rss_cloud_sync_logo"
-            android:gravity="center"
-            android:filter="true" />
+        <path
+            android:fillColor="#6EA8FF"
+            android:pathData="M67,151L120,151L120,183L67,183Z" />
 
-    </item>
+        <path
+            android:fillColor="#8B7CFF"
+            android:pathData="M120,151L173,151L173,183L120,183Z" />
 
-</layer-list>
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M82,91L105,91L105,115L82,115Z" />
+
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M111,91L134,91L134,115L111,115Z" />
+
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M140,91L163,91L163,115L140,115Z" />
+
+        <path
+            android:fillColor="#43D6A2"
+            android:pathData="M82,128L158,128L158,138L82,138Z" />
+    </group>
+</vector>
