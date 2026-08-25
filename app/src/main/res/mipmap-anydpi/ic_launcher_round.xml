@@ -1,15 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path android:fillColor="#3F22A8" android:pathData="M0,0h108v108h-108z" />
-    <path android:fillColor="#5C38D8" android:pathData="M0,70L108,0v108H0z" android:fillAlpha="0.55" />
-    <group android:pivotX="54" android:pivotY="54" android:scaleX="0.70" android:scaleY="0.70">
-        <path android:fillColor="#48D7FF" android:pathData="M26,62A17,17 0,0 1,31 30A18,18 0,0 1,65 39A16,16 0,0 1,69 62H26A13,13 0,0 1,26 45A14,14 0,0 1,26 62Z" />
-        <path android:fillColor="#FFFFFF" android:pathData="M31,47h10v10H31zM45,47h10v10H45zM59,47h10v10H59z" />
-        <path android:fillColor="#43D6A2" android:pathData="M31,62h38v5H31z" />
-        <path android:fillColor="#FFD34E" android:pathData="M42,30h5v10h-5zM54,30h5v10h-5z" />
-    </group>
-</vector>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/ic_launcher_background" />
+    <item android:width="72dp" android:height="72dp" android:gravity="center">
+        <bitmap android:src="@drawable/rss_cloud_sync_logo" android:gravity="fill" />
+    </item>
+</layer-list>
