@@ -8,6 +8,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
 import com.google.android.material.button.MaterialButton
@@ -25,6 +26,8 @@ class SyncPairsActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Sync Folders"
+        binding.upgradeButton.isEnabled = true
+        binding.upgradeButton.alpha = 1f
         binding.upgradeButton.setOnClickListener { startActivity(Intent(this, PremiumActivity::class.java)) }
         renderPairs()
     }
@@ -40,6 +43,8 @@ class SyncPairsActivity : AppCompatActivity() {
         binding.planText.text = if (premium) "PREMIUM • Multiple folder pairs" else "FREE • 1 folder pair"
         binding.summaryText.text = if (premium) "All enabled pairs are included when you press Sync Now." else "Free includes one folder pair. Upgrade to Premium for more pairs."
         binding.upgradeButton.visibility = if (premium) android.view.View.GONE else android.view.View.VISIBLE
+        binding.upgradeButton.isEnabled = true
+        binding.upgradeButton.alpha = 1f
         binding.pairsContainer.removeAllViews()
 
         if (pairs.isEmpty()) {
@@ -118,7 +123,7 @@ class SyncPairsActivity : AppCompatActivity() {
             setOnClickListener {
                 SyncPairStore.delete(prefs, pair.id)
                 renderPairs()
-                android.widget.Toast.makeText(this@SyncPairsActivity, "Folder pair deleted", android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@SyncPairsActivity, "Folder pair deleted", Toast.LENGTH_SHORT).show()
             }
         }
         actions.addView(edit); actions.addView(delete); box.addView(actions)
