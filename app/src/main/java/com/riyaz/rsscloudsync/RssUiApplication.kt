@@ -49,25 +49,40 @@ class RssUiApplication : Application() {
             elevation = 0f
             itemIconTintList = null
             menu.setGroupDividerEnabled(true)
+            setItemVerticalPadding(dp(3))
+            setItemHorizontalPadding(dp(10))
+            setItemIconPadding(dp(9))
+            setItemIconSize(dp(22))
         }
         root.findViewById<BottomNavigationView>(id("bottomNav"))?.apply { itemIconTintList = null }
         root.findViewById<ViewGroup>(id("appearanceCard"))?.let { selector ->
-            selector.background = GradientDrawable().apply {
-                cornerRadius = dp(22).toFloat(); setColor(surface); setStroke(dp(1), outline)
-            }
+            selector.background = GradientDrawable().apply { cornerRadius = dp(22).toFloat(); setColor(surface); setStroke(dp(1), outline) }
             selector.layoutParams = selector.layoutParams.apply { height = dp(48) }
             selector.requestLayout()
         }
 
-        setHeight<MaterialCardView>(root, activity, "premiumBanner", 190)
-        setHeight<MaterialCardView>(root, activity, "syncStatusCard", 214)
-        setHeight<MaterialCardView>(root, activity, "foldersCard", 94)
-        setHeight<MaterialCardView>(root, activity, "syncSetupCard", 94)
-        setHeight<ViewGroup>(root, activity, "cloudAccountsScroll", 166)
-        setHeight<BottomNavigationView>(root, activity, "bottomNav", 70)
+        setHeight<MaterialCardView>(root, activity, "premiumBanner", 184)
+        setHeight<MaterialCardView>(root, activity, "syncStatusCard", 204)
+        setHeight<MaterialCardView>(root, activity, "foldersCard", 88)
+        setHeight<MaterialCardView>(root, activity, "syncSetupCard", 88)
+        setHeight<ViewGroup>(root, activity, "cloudAccountsScroll", 158)
+        setHeight<BottomNavigationView>(root, activity, "bottomNav", 66)
+
+        // Tighten only the large section gaps. Keep internal card spacing intact.
+        root.findViewById<ViewGroup>(id("contentLayout"))?.let { content ->
+            for (i in 0 until content.childCount) {
+                val child = content.getChildAt(i)
+                val lp = child.layoutParams
+                if (lp is ViewGroup.MarginLayoutParams && lp.topMargin > dp(10)) {
+                    lp.topMargin = dp(8)
+                    child.layoutParams = lp
+                }
+            }
+        }
+
         root.findViewById<ViewGroup>(id("cloudProviderRow"))?.let { row ->
             for (i in 0 until row.childCount) {
-                row.getChildAt(i).layoutParams = row.getChildAt(i).layoutParams.apply { width = dp(142); height = dp(158) }
+                row.getChildAt(i).layoutParams = row.getChildAt(i).layoutParams.apply { width = dp(142); height = dp(154) }
                 row.getChildAt(i).requestLayout()
             }
         }
@@ -76,7 +91,6 @@ class RssUiApplication : Application() {
             it.requestLayout()
         }
 
-        // Add the notification bell to the existing toolbar without replacing the dashboard layout.
         root.findViewById<Toolbar>(id("toolbar"))?.let { toolbar ->
             if (toolbar.menu.findItem(R.id.action_notifications) == null) {
                 toolbar.inflateMenu(R.menu.main_toolbar_menu)
