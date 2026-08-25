@@ -69,6 +69,7 @@ class SyncSetupActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Folder pair"
         setupCloudAccounts(); setupDirection(); setupScheduleOption(); loadConfiguration(); loadFolders()
+        binding.addCloudAccountButton.setOnClickListener { startActivity(Intent(this, CloudAccountsActivity::class.java)) }
         binding.chooseLocalButton.setOnClickListener { chooseLocalSource() }
         binding.chooseTargetButton.setOnClickListener { chooseTarget() }
         binding.savePairButton.setOnClickListener { savePair(); Toast.makeText(this, if (scheduleSpinner?.selectedItem?.toString() == "Schedule now") "Scheduled folder pair saved" else "Folder pair saved", Toast.LENGTH_SHORT).show() }
@@ -82,9 +83,9 @@ class SyncSetupActivity : AppCompatActivity() {
         val parent = binding.savePairButton.parent as? ViewGroup ?: return
         val index = parent.indexOfChild(binding.savePairButton)
         scheduleHeader = TextView(this).apply { text = "SYNC MODE"; textSize = 11f; setTextColor(resolveColor(com.google.android.material.R.attr.colorOnSurfaceVariant)); setTypeface(typeface, android.graphics.Typeface.BOLD) }
-        parent.addView(scheduleHeader, index, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14) })
+        parent.addView(scheduleHeader, index, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(10) })
         scheduleSpinner = Spinner(this).apply { adapter = spinnerAdapter(arrayOf("Save only", "Schedule now")) }
-        parent.addView(scheduleSpinner, index + 1, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(50)).apply { topMargin = dp(4) })
+        parent.addView(scheduleSpinner, index + 1, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(46)).apply { topMargin = dp(3) })
         scheduleSpinner?.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) { applyScheduleVisibility() }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
@@ -92,10 +93,7 @@ class SyncSetupActivity : AppCompatActivity() {
         syncCard = binding.syncStatusText.parent as? View
         historyCard = binding.historyText.parent as? View
         val historyContainer = historyCard?.parent as? ViewGroup
-        historyContainer?.let {
-            val hIndex = it.indexOfChild(historyCard)
-            if (hIndex > 0) historyHeader = it.getChildAt(hIndex - 1)
-        }
+        historyContainer?.let { val hIndex = it.indexOfChild(historyCard); if (hIndex > 0) historyHeader = it.getChildAt(hIndex - 1) }
         applyScheduleVisibility()
     }
 
@@ -121,6 +119,7 @@ class SyncSetupActivity : AppCompatActivity() {
         }
         if (accounts.isEmpty()) accounts += "No connected cloud accounts"
         binding.cloudProviderSpinner.adapter = spinnerAdapter(accounts.toTypedArray())
+        binding.addCloudAccountButton.visibility = View.VISIBLE
         val savedProvider = prefs.getString("selected_cloud_provider", null)
         if (!savedProvider.isNullOrBlank()) accountProviders.indexOf(savedProvider).takeIf { it >= 0 }?.let { binding.cloudProviderSpinner.setSelection(it) }
         binding.cloudProviderSpinner.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener { override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) { loadFolders() }; override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit })
@@ -149,7 +148,7 @@ class SyncSetupActivity : AppCompatActivity() {
         val files = prefs.getStringSet("selected_local_files", emptySet()) ?: emptySet(); val folder = prefs.getString("sync_folder_uri", null)
         binding.localFolderText.text = when { files.isNotEmpty() -> "${files.size} individual file${if (files.size == 1) "" else "s"} selected"; folder != null -> prettyUri(folder); else -> "Select a local folder" }
         val provider = selectedProvider()
-        binding.cloudAccountName.text = when { provider == "Google Drive" -> "Google Drive • ${prefs.getString("google_drive_account_email", "signed-in account")}"; provider != null -> provider; else -> "Only signed-in cloud accounts are shown" }
+        binding.cloudAccountName.text = when { provider == "Google Drive" -> "Google Drive • ${prefs.getString("google_drive_account_email", "signed-in account")}"; provider != null -> provider; else -> "No connected account" }
         binding.targetFolderText.text = if (provider == "Google Drive") prefs.getString("google_drive_target_folder_name", null)?.let { "Google Drive / $it" } ?: "Select a cloud folder" else "Select a cloud folder"
     }
 
