@@ -86,9 +86,7 @@ class MainActivity : AppCompatActivity() {
     private fun findButtons(parent: View): List<MaterialButton> {
         val result = mutableListOf<MaterialButton>()
         if (parent is MaterialButton) result += parent
-        if (parent is ViewGroup) {
-            for (i in 0 until parent.childCount) result += findButtons(parent.getChildAt(i))
-        }
+        if (parent is ViewGroup) for (i in 0 until parent.childCount) result += findButtons(parent.getChildAt(i))
         return result
     }
 
@@ -98,6 +96,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupNavigation() {
+        binding.upgradeBannerButton.setOnClickListener { openPremium() }
         binding.foldersCard.setOnClickListener { startActivity(Intent(this, SyncPairsActivity::class.java)) }
         binding.syncSetupCard.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         binding.syncNowButton.setOnClickListener { startActivity(Intent(this, SyncPairsActivity::class.java)) }
@@ -106,10 +105,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupDrawer() {
         binding.toolbar.setNavigationOnClickListener { binding.drawerLayout.openDrawer(binding.navigationView) }
-        binding.navigationView.getHeaderView(0)?.findViewById<View>(R.id.drawerUpgradeButton)?.setOnClickListener {
-            startActivity(Intent(this, PremiumActivity::class.java))
-            binding.drawerLayout.closeDrawers()
-        }
         binding.navigationView.setNavigationItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> binding.mainScrollView.smoothScrollTo(0, 0)
@@ -121,11 +116,16 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_usage -> startActivity(Intent(this, CloudAccountsActivity::class.java))
                 R.id.nav_help -> startActivity(Intent(this, ContactActivity::class.java))
                 R.id.nav_about -> startActivity(Intent(this, AboutActivity::class.java))
+                R.id.nav_upgrade -> openPremium()
             }
             binding.navigationView.setCheckedItem(item.itemId)
             binding.drawerLayout.closeDrawers()
             true
         }
+    }
+
+    private fun openPremium() {
+        startActivity(Intent(this, PremiumActivity::class.java))
     }
 
     private fun setupBottomNavigation() {
@@ -162,21 +162,15 @@ class MainActivity : AppCompatActivity() {
         binding.syncSubtitle.setTextColor(secondary)
         binding.lastSyncText.setTextColor(secondary)
         listOf(binding.syncStatusCard, binding.foldersCard, binding.syncSetupCard).forEach { styleCard(it, surface, outline) }
-        for (i in 0 until binding.cloudProviderRow.childCount) {
-            (binding.cloudProviderRow.getChildAt(i) as? MaterialCardView)?.let { styleCard(it, surface, outline) }
-        }
+        for (i in 0 until binding.cloudProviderRow.childCount) (binding.cloudProviderRow.getChildAt(i) as? MaterialCardView)?.let { styleCard(it, surface, outline) }
         binding.premiumBanner.background = gradient(intArrayOf(Color.rgb(72, 39, 177), Color.rgb(39, 119, 225)), 22f)
         listOf(binding.lightButton, binding.systemButton, binding.darkButton).forEach { button ->
-            val selected = when (mode) {
-                "light" -> button == binding.lightButton
-                "dark" -> button == binding.darkButton
-                else -> button == binding.systemButton
-            }
+            val selected = when (mode) { "light" -> button == binding.lightButton; "dark" -> button == binding.darkButton; else -> button == binding.systemButton }
             button.background = if (selected) gradient(intArrayOf(Color.rgb(125, 49, 235), Color.rgb(39, 190, 235)), 50f) else solid(Color.TRANSPARENT, 50f)
             button.setTextColor(if (selected) Color.WHITE else secondary)
         }
         binding.bottomNav.setBackgroundColor(surface)
-        val drawerColors = intArrayOf(0xFF6C3FEA.toInt(), 0xFF4D8DFF.toInt(), 0xFF2DC9A3.toInt(), 0xFF38A6F2.toInt(), 0xFFFF9F43.toInt(), 0xFFFFC83D.toInt(), 0xFF8B5CF6.toInt(), 0xFF2AB7C9.toInt(), 0xFF7C4DFF.toInt(), 0xFF22B8CF.toInt())
+        val drawerColors = intArrayOf(0xFF6C3FEA.toInt(), 0xFF4D8DFF.toInt(), 0xFF2DC9A3.toInt(), 0xFF38A6F2.toInt(), 0xFFFF9F43.toInt(), 0xFFFFC83D.toInt(), 0xFF8B5CF6.toInt(), 0xFF2AB7C9.toInt(), 0xFF7C4DFF.toInt(), 0xFFFFC83D.toInt())
         for (i in 0 until binding.navigationView.menu.size()) binding.navigationView.menu.getItem(i).icon?.let { DrawableCompat.setTint(it, drawerColors[i % drawerColors.size]) }
         val bottomColors = intArrayOf(0xFF7C4DFF.toInt(), 0xFF3F83F8.toInt(), 0xFF22B8CF.toInt(), 0xFF6875F5.toInt())
         for (i in 0 until binding.bottomNav.menu.size()) binding.bottomNav.menu.getItem(i).icon?.let { DrawableCompat.setTint(it, bottomColors[i % bottomColors.size]) }
