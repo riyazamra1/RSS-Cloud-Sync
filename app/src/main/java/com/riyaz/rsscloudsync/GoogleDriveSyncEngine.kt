@@ -12,6 +12,7 @@ class GoogleDriveSyncEngine(
     private val resolver: ContentResolver
 ) {
     enum class Direction { UPLOAD_ONLY, UPLOAD_MIRROR, UPLOAD_THEN_DELETE, DOWNLOAD_ONLY, DOWNLOAD_MIRROR, DOWNLOAD_THEN_DELETE, TWO_WAY }
+    data class Options(val excludeHiddenFiles: Boolean = true, val excludeSubfolders: Boolean = false, val deleteEmptySubfolders: Boolean = false)
     data class Progress(val processed: Int, val total: Int, val uploaded: Int, val downloaded: Int, val changed: Int, val failed: Int, val bytes: Long, val currentPath: String)
     data class Result(val processed: Int, val uploaded: Int, val downloaded: Int, val changed: Int, val failed: Int, val bytes: Long)
     private data class LocalItem(val uri: Uri, val path: String, val name: String, val mime: String, val size: Long, val modified: Long)
@@ -20,10 +21,10 @@ class GoogleDriveSyncEngine(
     fun cancel() { cancelled = true }
     fun isCancelled(): Boolean = cancelled
 
-    fun sync(localTree: Uri, driveFolderId: String, direction: Direction, listener: ((Progress) -> Unit)? = null): Result {
+    fun sync(localTree: Uri, driveFolderId: String, direction: Direction, options: Options = Options(), listener: ((Progress) -> Unit)? = null): Result {
         cancelled = false
         val drive = DriveClient(context)
-        val local = indexLocal(localTree)
+        val local = indexLocal(localTree, options)
         val remote = indexDrive(drive, driveFolderId)
         val paths = LinkedHashSet<String>().apply { addAll(local.keys); addAll(remote.keys.filter { !remote.getValue(it).directory }) }
         val files = paths.filter { local[it] != null || remote[it]?.directory != true }
@@ -57,6 +58,7 @@ class GoogleDriveSyncEngine(
         }
         if (!cancelled && direction == Direction.UPLOAD_MIRROR) for ((path, item) in remote) if (!item.directory && !local.containsKey(path)) try { drive.delete(item.entry.id); changed++ } catch (_: Exception) { failed++ }
         if (!cancelled && direction == Direction.DOWNLOAD_MIRROR) for ((path, item) in local) if (!remote.containsKey(path)) try { deleteLocal(item.uri); changed++ } catch (_: Exception) { failed++ }
+        if (!cancelled && options.deleteEmptySubfolders) deleteEmptyLocalFolders(localTree)
         return Result(processed, uploaded, downloaded, changed, failed, bytes)
     }
 
@@ -76,20 +78,24 @@ class GoogleDriveSyncEngine(
     }
 
     private fun queryName(uri: Uri): String = resolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { if (it.moveToFirst()) it.getString(0) else "file" } ?: "file"
-    private fun indexLocal(tree: Uri): Map<String, LocalItem> {
+
+    private fun indexLocal(tree: Uri, options: Options): Map<String, LocalItem> {
         val result = LinkedHashMap<String, LocalItem>(); val queue = ArrayDeque<Pair<String, String>>(); queue.add("" to DocumentsContract.getTreeDocumentId(tree))
         while (queue.isNotEmpty() && !cancelled) {
             val (parentPath, parentId) = queue.removeFirst(); val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId)
             resolver.query(children, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE, DocumentsContract.Document.COLUMN_SIZE, DocumentsContract.Document.COLUMN_LAST_MODIFIED), null, null, null)?.use { c ->
                 val idCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID); val nameCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME); val mimeCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE); val sizeCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_SIZE); val modCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
                 while (c.moveToNext()) {
-                    val id = c.getString(idCol); val name = c.getString(nameCol) ?: "Unnamed"; val mime = c.getString(mimeCol) ?: "application/octet-stream"; val path = if (parentPath.isBlank()) name else "$parentPath/$name"
-                    if (mime == DocumentsContract.Document.MIME_TYPE_DIR) queue.add(path to id) else result[path] = LocalItem(DocumentsContract.buildDocumentUriUsingTree(tree, id), path, name, mime, if (c.isNull(sizeCol)) 0L else c.getLong(sizeCol), if (c.isNull(modCol)) 0L else c.getLong(modCol))
+                    val id = c.getString(idCol); val name = c.getString(nameCol) ?: "Unnamed"; if (options.excludeHiddenFiles && name.startsWith('.')) continue
+                    val mime = c.getString(mimeCol) ?: "application/octet-stream"; val path = if (parentPath.isBlank()) name else "$parentPath/$name"
+                    if (mime == DocumentsContract.Document.MIME_TYPE_DIR) { if (!options.excludeSubfolders) queue.add(path to id) }
+                    else result[path] = LocalItem(DocumentsContract.buildDocumentUriUsingTree(tree, id), path, name, mime, if (c.isNull(sizeCol)) 0L else c.getLong(sizeCol), if (c.isNull(modCol)) 0L else c.getLong(modCol))
                 }
             }
         }
         return result
     }
+
     private fun indexDrive(drive: DriveClient, rootId: String): Map<String, RemoteItem> {
         val result = LinkedHashMap<String, RemoteItem>(); val queue = ArrayDeque<Pair<String, String>>(); queue.add("" to rootId)
         while (queue.isNotEmpty() && !cancelled) { val (parentPath, parentId) = queue.removeFirst(); for (entry in drive.listChildren(parentId)) { val path = if (parentPath.isBlank()) entry.name else "$parentPath/${entry.name}"; val directory = entry.mimeType == DriveClient.FOLDER_MIME; result[path] = RemoteItem(entry, path, directory); if (directory) queue.add(path to entry.id) } }
@@ -101,17 +107,17 @@ class GoogleDriveSyncEngine(
         val target = existing?.let { DocumentsContract.buildDocumentUriUsingTree(localTree, it) } ?: DocumentsContract.createDocument(resolver, parentUri, remote.entry.mimeType.ifBlank { "application/octet-stream" }, remote.entry.name) ?: throw IllegalStateException("Unable to create local file $path")
         resolver.openOutputStream(target, "wt").use { output -> if (output == null) throw IllegalStateException("Unable to open local file $path"); return drive.download(remote.entry, output) }
     }
-    private fun ensureLocalFolder(tree: Uri, path: String): String {
-        var current = DocumentsContract.getTreeDocumentId(tree)
-        for (part in path.split('/').filter { it.isNotBlank() }) current = findLocalChild(tree, current, part) ?: run { val created = DocumentsContract.createDocument(resolver, DocumentsContract.buildDocumentUriUsingTree(tree, current), DocumentsContract.Document.MIME_TYPE_DIR, part) ?: throw IllegalStateException("Unable to create local folder $part"); DocumentsContract.getDocumentId(created) }
-        return current
-    }
-    private fun findLocalChild(tree: Uri, parentId: String, name: String): String? {
-        val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId)
-        resolver.query(children, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { c -> val idCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID); val nameCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME); while (c.moveToNext()) if (c.getString(nameCol) == name) return c.getString(idCol) }
-        return null
-    }
+    private fun ensureLocalFolder(tree: Uri, path: String): String { var current = DocumentsContract.getTreeDocumentId(tree); for (part in path.split('/').filter { it.isNotBlank() }) current = findLocalChild(tree, current, part) ?: run { val created = DocumentsContract.createDocument(resolver, DocumentsContract.buildDocumentUriUsingTree(tree, current), DocumentsContract.Document.MIME_TYPE_DIR, part) ?: throw IllegalStateException("Unable to create local folder $part"); DocumentsContract.getDocumentId(created) }; return current }
+    private fun findLocalChild(tree: Uri, parentId: String, name: String): String? { val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId); resolver.query(children, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { c -> val idCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID); val nameCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME); while (c.moveToNext()) if (c.getString(nameCol) == name) return c.getString(idCol) }; return null }
     private fun deleteLocal(uri: Uri) { if (!DocumentsContract.deleteDocument(resolver, uri)) throw IllegalStateException("Unable to delete local file") }
+    private fun deleteEmptyLocalFolders(tree: Uri) { val root = DocumentsContract.getTreeDocumentId(tree); deleteEmptyChildren(tree, root) }
+    private fun deleteEmptyChildren(tree: Uri, parentId: String): Boolean {
+        var empty = true; val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId)
+        val dirs = ArrayList<String>()
+        resolver.query(children, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_MIME_TYPE), null, null, null)?.use { c -> val idCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID); val mimeCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE); while (c.moveToNext()) { val id = c.getString(idCol); if (c.getString(mimeCol) == DocumentsContract.Document.MIME_TYPE_DIR) dirs.add(id) else empty = false } }
+        for (id in dirs) { if (deleteEmptyChildren(tree, id)) try { DocumentsContract.deleteDocument(resolver, DocumentsContract.buildDocumentUriUsingTree(tree, id)) } catch (_: Exception) {} else empty = false }
+        return empty
+    }
     private fun isLocalNewer(local: LocalItem, remote: RemoteItem): Boolean = local.modified > remote.entry.modified || local.size != remote.entry.size
     private fun isRemoteNewer(local: LocalItem, remote: RemoteItem): Boolean = remote.entry.modified > local.modified || remote.entry.size != local.size
 }
