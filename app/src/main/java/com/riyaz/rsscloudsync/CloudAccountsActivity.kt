@@ -9,6 +9,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
+import com.google.android.gms.common.api.Status
 import com.riyaz.rsscloudsync.databinding.ActivityCloudAccountsBinding
 import java.util.concurrent.Executors
 
@@ -18,13 +19,10 @@ class CloudAccountsActivity : AppCompatActivity() {
     private val executor = Executors.newSingleThreadExecutor()
 
     private val googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode != RESULT_OK) {
-            Toast.makeText(this, "Google sign-in was cancelled or closed", Toast.LENGTH_SHORT).show()
-            refreshState()
-            return@registerForActivityResult
-        }
+        val data = result.data
         try {
-            val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).getResult(ApiException::class.java)
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            val account = task.getResult(ApiException::class.java)
             val connected = (prefs.getStringSet("connected_cloud_providers", emptySet()) ?: emptySet()).toMutableSet().apply { add(GoogleDriveAuthManager.PROVIDER) }
             prefs.edit()
                 .putStringSet("connected_cloud_providers", connected)
@@ -36,15 +34,18 @@ class CloudAccountsActivity : AppCompatActivity() {
             Toast.makeText(this, "Google Drive connected", Toast.LENGTH_SHORT).show()
             refreshState(); loadGoogleQuota()
         } catch (e: ApiException) {
+            val status = e.status
             val detail = when (e.statusCode) {
-                CommonStatusCodes.DEVELOPER_ERROR -> "Google sign-in configuration error. Check the app package name and SHA-1 certificate in Google Cloud Console."
-                GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> "Google sign-in was cancelled."
+                CommonStatusCodes.DEVELOPER_ERROR -> "Google sign-in configuration error (10). The APK signing SHA-1/package pair does not match the Android OAuth client."
+                GoogleSignInStatusCodes.SIGN_IN_CANCELLED, CommonStatusCodes.CANCELED -> "Google sign-in was cancelled (16)."
                 CommonStatusCodes.NETWORK_ERROR -> "Google sign-in network error. Check your internet connection."
-                else -> "Google sign-in failed (code ${e.statusCode})."
+                else -> "Google sign-in failed (${e.statusCode}: ${status.statusMessage ?: "${e.message ?: "Unknown error"}"})."
             }
-            Toast.makeText(this, detail, Toast.LENGTH_LONG).show(); refreshState()
+            Toast.makeText(this, detail, Toast.LENGTH_LONG).show()
+            refreshState()
         } catch (e: Exception) {
-            Toast.makeText(this, "Google sign-in failed: ${e.message ?: "Unknown error"}", Toast.LENGTH_LONG).show(); refreshState()
+            Toast.makeText(this, "Google sign-in failed: ${e.message ?: "Unknown error"}", Toast.LENGTH_LONG).show()
+            refreshState()
         }
     }
 
@@ -85,12 +86,7 @@ class CloudAccountsActivity : AppCompatActivity() {
     }
 
     private fun clearGoogleAccountState() {
-        prefs.edit()
-            .remove("google_drive_account_email")
-            .remove("google_drive_account_name")
-            .remove("google_drive_target_folder_id")
-            .remove("google_drive_target_folder_name")
-            .apply()
+        prefs.edit().remove("google_drive_account_email").remove("google_drive_account_name").remove("google_drive_target_folder_id").remove("google_drive_target_folder_name").apply()
     }
 
     private fun selectProvider(provider: String) { prefs.edit().putString("selected_cloud_provider", provider).apply(); startActivity(Intent(this, SyncSetupActivity::class.java)) }
