@@ -11,7 +11,7 @@ class GoogleDriveSyncEngine(
     private val context: Context,
     private val resolver: ContentResolver
 ) {
-    enum class Direction { UPLOAD_ONLY, DOWNLOAD_ONLY, TWO_WAY }
+    enum class Direction { UPLOAD_ONLY, UPLOAD_MIRROR, UPLOAD_THEN_DELETE, DOWNLOAD_ONLY, DOWNLOAD_MIRROR, DOWNLOAD_THEN_DELETE, TWO_WAY }
 
     data class Progress(
         val processed: Int,
@@ -64,30 +64,51 @@ class GoogleDriveSyncEngine(
         var changed = 0
         var failed = 0
         var bytes = 0L
+
         for (path in files) {
             if (cancelled) break
             try {
                 val l = local[path]
                 val r = remote[path]
                 when (direction) {
-                    Direction.UPLOAD_ONLY -> if (l != null && (r == null || isLocalNewer(l, r))) {
-                        val parent = remoteFolderForPath(drive, driveFolderId, path)
-                        bytes += drive.upload(l.uri, parent, l.name, l.mime, r?.entry?.id); uploaded++; changed++
+                    Direction.UPLOAD_ONLY, Direction.UPLOAD_MIRROR, Direction.UPLOAD_THEN_DELETE -> {
+                        if (l != null && (r == null || isLocalNewer(l, r))) {
+                            val parent = remoteFolderForPath(drive, driveFolderId, path)
+                            bytes += drive.upload(l.uri, parent, l.name, l.mime, r?.entry?.id)
+                            uploaded++
+                            changed++
+                            if (direction == Direction.UPLOAD_THEN_DELETE) deleteLocal(l.uri)
+                        }
                     }
-                    Direction.DOWNLOAD_ONLY -> if (r != null && (l == null || isRemoteNewer(l, r))) {
-                        bytes += downloadToLocal(drive, localTree, r, path); downloaded++; changed++
+                    Direction.DOWNLOAD_ONLY, Direction.DOWNLOAD_MIRROR, Direction.DOWNLOAD_THEN_DELETE -> {
+                        if (r != null && (l == null || isRemoteNewer(l, r))) {
+                            bytes += downloadToLocal(drive, localTree, r, path)
+                            downloaded++
+                            changed++
+                            if (direction == Direction.DOWNLOAD_THEN_DELETE && l != null) deleteLocal(l.uri)
+                        }
                     }
                     Direction.TWO_WAY -> when {
                         l != null && r == null -> {
                             val parent = remoteFolderForPath(drive, driveFolderId, path)
-                            bytes += drive.upload(l.uri, parent, l.name, l.mime); uploaded++; changed++
+                            bytes += drive.upload(l.uri, parent, l.name, l.mime)
+                            uploaded++
+                            changed++
                         }
-                        l == null && r != null -> { bytes += downloadToLocal(drive, localTree, r, path); downloaded++; changed++ }
+                        l == null && r != null -> {
+                            bytes += downloadToLocal(drive, localTree, r, path)
+                            downloaded++
+                            changed++
+                        }
                         l != null && r != null && (l.size != r.entry.size || l.modified != r.entry.modified) -> {
                             if (isLocalNewer(l, r)) {
                                 val parent = remoteFolderForPath(drive, driveFolderId, path)
-                                bytes += drive.upload(l.uri, parent, l.name, l.mime, r.entry.id); uploaded++
-                            } else { bytes += downloadToLocal(drive, localTree, r, path); downloaded++ }
+                                bytes += drive.upload(l.uri, parent, l.name, l.mime, r.entry.id)
+                                uploaded++
+                            } else {
+                                bytes += downloadToLocal(drive, localTree, r, path)
+                                downloaded++
+                            }
                             changed++
                         }
                     }
@@ -96,6 +117,25 @@ class GoogleDriveSyncEngine(
             processed++
             listener?.invoke(Progress(processed, files.size, uploaded, downloaded, changed, failed, bytes, path))
         }
+
+        if (!cancelled && direction == Direction.UPLOAD_MIRROR) {
+            for ((path, item) in remote) {
+                if (cancelled) break
+                if (!item.directory && !local.containsKey(path)) {
+                    try { drive.delete(item.entry.id); changed++ } catch (_: Exception) { failed++ }
+                }
+            }
+        }
+
+        if (!cancelled && direction == Direction.DOWNLOAD_MIRROR) {
+            for ((path, item) in local) {
+                if (cancelled) break
+                if (!remote.containsKey(path)) {
+                    try { deleteLocal(item.uri); changed++ } catch (_: Exception) { failed++ }
+                }
+            }
+        }
+
         return Result(processed, uploaded, downloaded, changed, failed, bytes)
     }
 
@@ -109,7 +149,8 @@ class GoogleDriveSyncEngine(
                 val name = queryName(uri)
                 val mime = resolver.getType(uri) ?: "application/octet-stream"
                 val existing = drive.findChild(driveFolderId, name)
-                bytes += drive.upload(uri, driveFolderId, name, mime, existing?.id); uploaded++; changed++
+                bytes += drive.upload(uri, driveFolderId, name, mime, existing?.id)
+                uploaded++; changed++
             } catch (_: Exception) { failed++ }
             processed++
             listener?.invoke(Progress(processed, files.size, uploaded, 0, changed, failed, bytes, queryName(uri)))
@@ -189,6 +230,10 @@ class GoogleDriveSyncEngine(
             while (c.moveToNext()) if (c.getString(nameCol) == name) return c.getString(idCol)
         }
         return null
+    }
+
+    private fun deleteLocal(uri: Uri) {
+        if (!DocumentsContract.deleteDocument(resolver, uri)) throw IllegalStateException("Unable to delete local file")
     }
 
     private fun isLocalNewer(local: LocalItem, remote: RemoteItem): Boolean = local.modified > remote.entry.modified || local.size != remote.entry.size
