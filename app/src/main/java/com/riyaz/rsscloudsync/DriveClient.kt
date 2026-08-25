@@ -56,7 +56,14 @@ class DriveClient(private val context: Context) {
             val files = json.optJSONArray("files") ?: JSONArray()
             for (i in 0 until files.length()) {
                 val file = files.getJSONObject(i)
-                output += Entry(file.getString("id"), file.optString("name"), file.optString("mimeType"), file.optLong("size", 0L), parseTime(file.optString("modifiedTime")), parentId)
+                output += Entry(
+                    file.getString("id"),
+                    file.optString("name"),
+                    file.optString("mimeType"),
+                    file.optLong("size", 0L),
+                    parseTime(file.optString("modifiedTime")),
+                    parentId
+                )
             }
             pageToken = json.optString("nextPageToken").ifBlank { null }
         } while (pageToken != null)
@@ -85,15 +92,41 @@ class DriveClient(private val context: Context) {
         return current
     }
 
-    fun quotaText(): String {
-        val quota = JSONObject(String(request("GET", "https://www.googleapis.com/drive/v3/about?fields=storageQuota"))).optJSONObject("storageQuota") ?: return "Connected"
-        val limit = quota.optLong("limit", -1L)
-        val usage = quota.optLong("usage", 0L)
-        return if (limit > 0) "Used: ${formatBytes(usage)} • Free: ${formatBytes((limit - usage).coerceAtLeast(0L))} • Total: ${formatBytes(limit)}"
-        else "Used: ${formatBytes(usage)} • Total: Unlimited"
+    fun quota(): Triple<Long, Long, Long> {
+        val quota = JSONObject(String(request("GET", "https://www.googleapis.com/drive/v3/about?fields=storageQuota"))).optJSONObject("storageQuota")
+            ?: return Triple(0L, 0L, 0L)
+        return Triple(
+            quota.optLong("usage", 0L),
+            quota.optLong("limit", 0L),
+            quota.optLong("usageInDrive", 0L)
+        )
     }
 
-    fun upload(uri: Uri, parentId: String, name: String, mime: String, onBytes: ((Long) -> Unit)? = null): Long {
+    fun quotaText(): String {
+        val (usage, limit, _) = quota()
+        return if (limit > 0L) {
+            "Used: ${formatBytes(usage)} • Free: ${formatBytes((limit - usage).coerceAtLeast(0L))} • Total: ${formatBytes(limit)}"
+        } else {
+            "Used: ${formatBytes(usage)} • Total: Unlimited"
+        }
+    }
+
+    fun upload(
+        uri: Uri,
+        parentId: String,
+        name: String,
+        mime: String,
+        existingId: String? = null,
+        onBytes: ((Long) -> Unit)? = null
+    ): Long {
+        return if (existingId != null) {
+            updateMedia(existingId, uri, mime, onBytes)
+        } else {
+            uploadNew(uri, parentId, name, mime, onBytes)
+        }
+    }
+
+    private fun uploadNew(uri: Uri, parentId: String, name: String, mime: String, onBytes: ((Long) -> Unit)?): Long {
         val boundary = "rss-${System.currentTimeMillis()}"
         val metadata = JSONObject().apply {
             put("name", name)
@@ -101,26 +134,30 @@ class DriveClient(private val context: Context) {
             put("parents", JSONArray().put(parentId))
         }.toString()
         val input = context.contentResolver.openInputStream(uri) ?: error("Cannot open local file")
-        val connection = URL("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,size,mimeType").openConnection() as HttpURLConnection
+        val connection = URL("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,size,mimeType,modifiedTime").openConnection() as HttpURLConnection
         connection.requestMethod = "POST"
         connection.doOutput = true
         connection.setRequestProperty("Authorization", "Bearer ${token()}")
         connection.setRequestProperty("Content-Type", "multipart/related; boundary=$boundary")
+        connection.connectTimeout = 30_000
+        connection.readTimeout = 120_000
         var total = 0L
-        connection.outputStream.use { output ->
-            output.write("--$boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n$metadata\r\n".toByteArray())
-            output.write("--$boundary\r\nContent-Type: $mime\r\n\r\n".toByteArray())
-            BufferedInputStream(input).use { inputStream ->
-                val buffer = ByteArray(64 * 1024)
-                while (true) {
-                    val count = inputStream.read(buffer)
-                    if (count < 0) break
-                    output.write(buffer, 0, count)
-                    total += count
-                    onBytes?.invoke(total)
+        input.use { source ->
+            connection.outputStream.use { output ->
+                output.write("--$boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n$metadata\r\n".toByteArray())
+                output.write("--$boundary\r\nContent-Type: $mime\r\n\r\n".toByteArray())
+                BufferedInputStream(source).use { inputStream ->
+                    val buffer = ByteArray(64 * 1024)
+                    while (true) {
+                        val count = inputStream.read(buffer)
+                        if (count < 0) break
+                        output.write(buffer, 0, count)
+                        total += count
+                        onBytes?.invoke(total)
+                    }
                 }
+                output.write("\r\n--$boundary--\r\n".toByteArray())
             }
-            output.write("\r\n--$boundary--\r\n".toByteArray())
         }
         val code = connection.responseCode
         val response = (if (code in 200..299) connection.inputStream else connection.errorStream)?.use { it.readBytes() } ?: ByteArray(0)
@@ -129,7 +166,40 @@ class DriveClient(private val context: Context) {
         return total
     }
 
+    private fun updateMedia(fileId: String, uri: Uri, mime: String, onBytes: ((Long) -> Unit)?): Long {
+        val connection = URL("https://www.googleapis.com/upload/drive/v3/files/${enc(fileId)}?uploadType=media&fields=id,size,mimeType,modifiedTime").openConnection() as HttpURLConnection
+        connection.requestMethod = "PATCH"
+        connection.doOutput = true
+        connection.setRequestProperty("Authorization", "Bearer ${token()}")
+        connection.setRequestProperty("Content-Type", mime)
+        connection.connectTimeout = 30_000
+        connection.readTimeout = 120_000
+        var total = 0L
+        context.contentResolver.openInputStream(uri)?.use { source ->
+            connection.outputStream.use { output ->
+                BufferedInputStream(source).use { input ->
+                    val buffer = ByteArray(64 * 1024)
+                    while (true) {
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        output.write(buffer, 0, count)
+                        total += count
+                        onBytes?.invoke(total)
+                    }
+                }
+            }
+        } ?: throw IllegalStateException("Cannot open local file")
+        val code = connection.responseCode
+        val response = (if (code in 200..299) connection.inputStream else connection.errorStream)?.use { it.readBytes() } ?: ByteArray(0)
+        connection.disconnect()
+        if (code !in 200..299) throw IllegalStateException("Google Drive update error $code: ${String(response).take(300)}")
+        return total
+    }
+
     fun download(entry: Entry, output: OutputStream, onBytes: ((Long) -> Unit)? = null): Long {
+        if (entry.mimeType.startsWith("application/vnd.google-apps.")) {
+            throw IllegalStateException("Google Workspace files cannot be downloaded as binary files")
+        }
         val connection = URL("https://www.googleapis.com/drive/v3/files/${enc(entry.id)}?alt=media").openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
         connection.setRequestProperty("Authorization", "Bearer ${token()}")
@@ -155,7 +225,9 @@ class DriveClient(private val context: Context) {
     fun delete(id: String) { request("DELETE", "https://www.googleapis.com/drive/v3/files/${enc(id)}") }
 
     private fun enc(value: String) = URLEncoder.encode(value, "UTF-8")
-    private fun parseTime(value: String): Long = try { SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US).parse(value)?.time ?: 0L } catch (_: Exception) { 0L }
+    private fun parseTime(value: String): Long = try {
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US).parse(value)?.time ?: 0L
+    } catch (_: Exception) { 0L }
 
     private fun formatBytes(value: Long): String {
         if (value < 1024L) return "$value B"
