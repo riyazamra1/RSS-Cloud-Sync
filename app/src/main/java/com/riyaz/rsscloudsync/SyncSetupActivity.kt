@@ -1,13 +1,21 @@
 package com.riyaz.rsscloudsync
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.LinearLayout
+import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.switchmaterial.SwitchMaterial
 import com.riyaz.rsscloudsync.databinding.ActivitySyncSetupBinding
 import java.util.Locale
 import java.util.concurrent.Executors
@@ -21,6 +29,11 @@ class SyncSetupActivity : AppCompatActivity() {
     private var selectingTarget = false
     private var accountProviders = emptyList<String>()
     private var pairId: String? = null
+    private var scheduleSpinner: Spinner? = null
+    private var scheduleHeader: TextView? = null
+    private var historyHeader: View? = null
+    private var historyCard: View? = null
+    private var syncCard: View? = null
 
     private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri == null) return@registerForActivityResult
@@ -48,59 +61,73 @@ class SyncSetupActivity : AppCompatActivity() {
         super.onCreate(state)
         pairId = intent.getStringExtra("pair_id")
         val newPair = intent.getBooleanExtra("new_pair", false)
-        if (pairId == null && !newPair) {
-            startActivity(Intent(this, SyncPairsActivity::class.java))
-            finish()
-            return
-        }
+        if (pairId == null && !newPair) { startActivity(Intent(this, SyncPairsActivity::class.java)); finish(); return }
         if (pairId != null) SyncPairStore.load(prefs, pairId!!)
         binding = ActivitySyncSetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Folder pair"
-        setupCloudAccounts(); setupDirection(); loadConfiguration(); loadFolders()
+        setupCloudAccounts(); setupDirection(); setupScheduleOption(); loadConfiguration(); loadFolders()
         binding.chooseLocalButton.setOnClickListener { chooseLocalSource() }
         binding.chooseTargetButton.setOnClickListener { chooseTarget() }
-        binding.savePairButton.setOnClickListener { savePair(); Toast.makeText(this, "Folder pair saved", Toast.LENGTH_SHORT).show() }
+        binding.savePairButton.setOnClickListener { savePair(); Toast.makeText(this, if (scheduleSpinner?.selectedItem?.toString() == "Schedule now") "Scheduled folder pair saved" else "Folder pair saved", Toast.LENGTH_SHORT).show() }
         binding.syncNowButton.setOnClickListener { if (activeEngine == null && activeDriveEngine == null) startSync() else { activeEngine?.cancel(); activeDriveEngine?.cancel() } }
         binding.clearHistoryButton.setOnClickListener { SyncHistoryManager.clear(this); loadHistory() }
         binding.selectFilesByNameCheckBox.setOnCheckedChangeListener { _, checked -> if (checked) filePicker.launch(arrayOf("*/*")) }
         binding.folderPairEnabledSwitch.setOnCheckedChangeListener { _, checked -> prefs.edit().putBoolean("folder_pair_enabled", checked).apply() }
     }
 
+    private fun setupScheduleOption() {
+        val parent = binding.savePairButton.parent as? ViewGroup ?: return
+        val index = parent.indexOfChild(binding.savePairButton)
+        scheduleHeader = TextView(this).apply { text = "SYNC MODE"; textSize = 11f; setTextColor(resolveColor(com.google.android.material.R.attr.colorOnSurfaceVariant)); setTypeface(typeface, android.graphics.Typeface.BOLD) }
+        parent.addView(scheduleHeader, index, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14) })
+        scheduleSpinner = Spinner(this).apply { adapter = spinnerAdapter(arrayOf("Save only", "Schedule now")) }
+        parent.addView(scheduleSpinner, index + 1, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(50)).apply { topMargin = dp(4) })
+        scheduleSpinner?.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) { applyScheduleVisibility() }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
+        }
+        syncCard = binding.syncStatusText.parent as? View
+        historyCard = binding.historyText.parent as? View
+        val historyContainer = historyCard?.parent as? ViewGroup
+        historyContainer?.let {
+            val hIndex = it.indexOfChild(historyCard)
+            if (hIndex > 0) historyHeader = it.getChildAt(hIndex - 1)
+        }
+        applyScheduleVisibility()
+    }
+
+    private fun applyScheduleVisibility() {
+        val scheduled = scheduleSpinner?.selectedItem?.toString() == "Schedule now"
+        syncCard?.visibility = if (scheduled) View.VISIBLE else View.GONE
+        historyHeader?.visibility = if (scheduled) View.VISIBLE else View.GONE
+        historyCard?.visibility = if (scheduled) View.VISIBLE else View.GONE
+    }
+
+    private fun loadScheduleMode() {
+        val saved = prefs.getString("schedule_mode", "Save only") ?: "Save only"
+        val spinner = scheduleSpinner ?: return
+        for (i in 0 until spinner.count) if (spinner.getItemAtPosition(i).toString() == saved) { spinner.setSelection(i); return }
+    }
+
     private fun setupCloudAccounts() {
         val connected = prefs.getStringSet("connected_cloud_providers", emptySet()) ?: emptySet()
         val accounts = ArrayList<String>()
         accountProviders = ArrayList<String>().apply {
-            if (connected.contains("Google Drive")) {
-                val email = prefs.getString("google_drive_account_email", null)
-                accounts += if (email.isNullOrBlank()) "Google Drive" else "Google Drive • $email"
-                add("Google Drive")
-            }
+            if (connected.contains("Google Drive")) { val email = prefs.getString("google_drive_account_email", null); accounts += if (email.isNullOrBlank()) "Google Drive" else "Google Drive • $email"; add("Google Drive") }
             connected.filter { it != "Google Drive" }.sorted().forEach { provider -> accounts += provider; add(provider) }
         }
         if (accounts.isEmpty()) accounts += "No connected cloud accounts"
         binding.cloudProviderSpinner.adapter = spinnerAdapter(accounts.toTypedArray())
         val savedProvider = prefs.getString("selected_cloud_provider", null)
         if (!savedProvider.isNullOrBlank()) accountProviders.indexOf(savedProvider).takeIf { it >= 0 }?.let { binding.cloudProviderSpinner.setSelection(it) }
-        binding.cloudProviderSpinner.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) { loadFolders() }
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
-        })
+        binding.cloudProviderSpinner.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener { override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) { loadFolders() }; override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit })
     }
     private fun selectedProvider(): String? = accountProviders.getOrNull(binding.cloudProviderSpinner.selectedItemPosition)
-
-    private fun chooseLocalSource() {
-        MaterialAlertDialogBuilder(this).setTitle("Local source").setItems(arrayOf("Folder", "Individual files")) { _, which ->
-            if (which == 0) { selectingTarget = false; folderPicker.launch(null) } else binding.selectFilesByNameCheckBox.isChecked = true
-        }.show()
-    }
-    private fun chooseTarget() {
-        if (selectedProvider() == null) { Toast.makeText(this, "Connect a cloud account first", Toast.LENGTH_SHORT).show(); return }
-        if (selectedProvider() == "Google Drive") driveFolderPicker.launch(Intent(this, GoogleDriveFolderPickerActivity::class.java))
-        else Toast.makeText(this, "This cloud provider's folder browser is not available yet", Toast.LENGTH_LONG).show()
-    }
+    private fun chooseLocalSource() { MaterialAlertDialogBuilder(this).setTitle("Local source").setItems(arrayOf("Folder", "Individual files")) { _, which -> if (which == 0) { selectingTarget = false; folderPicker.launch(null) } else binding.selectFilesByNameCheckBox.isChecked = true }.show() }
+    private fun chooseTarget() { if (selectedProvider() == null) { Toast.makeText(this, "Connect a cloud account first", Toast.LENGTH_SHORT).show(); return }; if (selectedProvider() == "Google Drive") driveFolderPicker.launch(Intent(this, GoogleDriveFolderPickerActivity::class.java)) else Toast.makeText(this, "This cloud provider's folder browser is not available yet", Toast.LENGTH_LONG).show() }
     private fun setupDirection() { binding.syncDirectionSpinner.adapter = spinnerAdapter(arrayOf("Two-way Sync", "Upload only", "Upload mirror", "Upload then delete", "Download only", "Download mirror", "Download then delete")) }
     private fun spinnerAdapter(items: Array<String>) = ArrayAdapter(this, android.R.layout.simple_spinner_item, items).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
 
@@ -112,15 +139,10 @@ class SyncSetupActivity : AppCompatActivity() {
         binding.excludeSubfoldersCheckBox.isChecked = prefs.getBoolean("exclude_subfolders", false)
         binding.deleteEmptySubfoldersCheckBox.isChecked = prefs.getBoolean("delete_empty_subfolders", false)
         binding.selectFilesByNameCheckBox.isChecked = (prefs.getStringSet("selected_local_files", emptySet()) ?: emptySet()).isNotEmpty()
+        loadScheduleMode()
     }
     private fun savePair() {
-        prefs.edit().putString("folder_pair_name", binding.folderPairNameEditText.text?.toString()?.trim().orEmpty().ifBlank { "My Folder Pair" })
-            .putString("selected_cloud_provider", selectedProvider() ?: "")
-            .putString("sync_direction", binding.syncDirectionSpinner.selectedItem.toString())
-            .putBoolean("folder_pair_enabled", binding.folderPairEnabledSwitch.isChecked)
-            .putBoolean("exclude_hidden_files", binding.excludeHiddenFilesCheckBox.isChecked)
-            .putBoolean("exclude_subfolders", binding.excludeSubfoldersCheckBox.isChecked)
-            .putBoolean("delete_empty_subfolders", binding.deleteEmptySubfoldersCheckBox.isChecked).apply()
+        prefs.edit().putString("folder_pair_name", binding.folderPairNameEditText.text?.toString()?.trim().orEmpty().ifBlank { "My Folder Pair" }).putString("selected_cloud_provider", selectedProvider() ?: "").putString("sync_direction", binding.syncDirectionSpinner.selectedItem.toString()).putString("schedule_mode", scheduleSpinner?.selectedItem?.toString() ?: "Save only").putBoolean("folder_pair_enabled", binding.folderPairEnabledSwitch.isChecked).putBoolean("exclude_hidden_files", binding.excludeHiddenFilesCheckBox.isChecked).putBoolean("exclude_subfolders", binding.excludeSubfoldersCheckBox.isChecked).putBoolean("delete_empty_subfolders", binding.deleteEmptySubfoldersCheckBox.isChecked).apply()
         pairId = SyncPairStore.saveCurrent(prefs, pairId)
     }
     private fun loadFolders() {
@@ -133,6 +155,7 @@ class SyncSetupActivity : AppCompatActivity() {
 
     private fun startSync() {
         savePair()
+        if (scheduleSpinner?.selectedItem?.toString() != "Schedule now") { Toast.makeText(this, "Select Schedule now to start a sync from this page", Toast.LENGTH_SHORT).show(); return }
         if (!binding.folderPairEnabledSwitch.isChecked) { Toast.makeText(this, "This folder pair is disabled", Toast.LENGTH_SHORT).show(); return }
         val provider = selectedProvider() ?: run { Toast.makeText(this, "Connect a cloud account first", Toast.LENGTH_SHORT).show(); return }
         val directionName = binding.syncDirectionSpinner.selectedItem.toString()
@@ -161,10 +184,12 @@ class SyncSetupActivity : AppCompatActivity() {
         }
     }
     private fun updateDriveProgress(progress: GoogleDriveSyncEngine.Progress) { runOnUiThread { binding.progressText.text = if (progress.total == 0) "100%" else "${progress.processed * 100 / progress.total}%"; binding.syncStatusDetail.text = "${progress.processed}/${progress.total} • ↑${progress.uploaded} ↓${progress.downloaded} • Failed: ${progress.failed} • ${formatBytes(progress.bytes)}"; binding.currentFileText.text = progress.currentPath } }
-    private fun selectSpinnerValue(spinner: android.widget.Spinner, value: String) { for (i in 0 until spinner.count) if (spinner.getItemAtPosition(i).toString() == value) { spinner.setSelection(i); return } }
+    private fun selectSpinnerValue(spinner: Spinner, value: String) { for (i in 0 until spinner.count) if (spinner.getItemAtPosition(i).toString() == value) { spinner.setSelection(i); return } }
     private fun prettyUri(value: String) = (Uri.parse(value).lastPathSegment ?: value).substringAfterLast(':').replace("%20", " ").ifBlank { value }
     private fun formatBytes(bytes: Long): String { if (bytes < 1024) return "$bytes B"; var value = bytes.toDouble(); val units = arrayOf("KB", "MB", "GB", "TB"); var index = 0; while (value >= 1024 && index < units.lastIndex) { value /= 1024; index++ }; return String.format(Locale.getDefault(), "%.2f %s", value, units[index]) }
     private fun loadHistory() { val entries = SyncHistoryManager.get(this); binding.historyText.text = if (entries.isEmpty()) "No sync history yet." else entries.take(10).joinToString("\n\n") { e -> "${if (e.success) "✓" else "⚠"} ${e.direction.replace('_', ' ')}\nFiles: ${e.filesProcessed} • ↑${e.uploadedFiles} ↓${e.downloadedFiles} • Failed: ${e.failedFiles}\nTransferred: ${formatBytes(e.bytesTransferred)}" } }
+    private fun resolveColor(attr: Int): Int { val a = theme.obtainStyledAttributes(intArrayOf(attr)); val color = a.getColor(0, Color.GRAY); a.recycle(); return color }
+    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
     override fun onSupportNavigateUp(): Boolean { finish(); return true }
     override fun onDestroy() { activeEngine?.cancel(); activeDriveEngine?.cancel(); executor.shutdownNow(); super.onDestroy() }
 }
