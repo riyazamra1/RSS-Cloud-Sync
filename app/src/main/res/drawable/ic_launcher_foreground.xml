@@ -4,40 +4,14 @@
     android:height="108dp"
     android:viewportWidth="240"
     android:viewportHeight="240">
-
-    <!-- Keep the RSS Cloud Sync mark inside Android's adaptive-icon safe zone. -->
-    <group
-        android:pivotX="120"
-        android:pivotY="120"
-        android:scaleX="0.48"
-        android:scaleY="0.48">
-
-        <path
-            android:fillColor="#48D7FF"
-            android:pathData="M72,128A42,42 0,0 1,83 48A45,45 0,0 1,166 72A39,39 0,0 1,174 148H72A32,32 0,0 1,72 84A35,35 0,0 1,72 128Z" />
-
-        <path
-            android:fillColor="#6EA8FF"
-            android:pathData="M67,151L120,151L120,183L67,183Z" />
-
-        <path
-            android:fillColor="#8B7CFF"
-            android:pathData="M120,151L173,151L173,183L120,183Z" />
-
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M82,91L105,91L105,115L82,115Z" />
-
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M111,91L134,91L134,115L111,115Z" />
-
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M140,91L163,91L163,115L140,115Z" />
-
-        <path
-            android:fillColor="#43D6A2"
-            android:pathData="M82,128L158,128L158,138L82,138Z" />
+    <group android:pivotX="120" android:pivotY="120" android:scaleX="0.62" android:scaleY="0.62">
+        <path android:fillColor="#48D7FF" android:pathData="M72,128A42,42 0,0 1,83 48A45,45 0,0 1,166 72A39,39 0,0 1,174 148H72A32,32 0,0 1,72 84A35,35 0,0 1,72 128Z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M82,91L105,91L105,115L82,115Z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M111,91L134,91L134,115L111,115Z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M140,91L163,91L163,115L140,115Z" />
+        <path android:fillColor="#43D6A2" android:pathData="M82,128L158,128L158,138L82,138Z" />
+        <path android:fillColor="#FFD34E" android:pathData="M91,66L101,66L101,82L91,82Z" />
+        <path android:fillColor="#FFD34E" android:pathData="M119,60L129,60L129,82L119,82Z" />
+        <path android:fillColor="#FFD34E" android:pathData="M147,66L157,66L157,82L147,82Z" />
     </group>
 </vector>
