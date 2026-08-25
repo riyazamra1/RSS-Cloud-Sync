@@ -9,6 +9,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity" android:exported="false" />
+        <activity android:name=".SyncPairsActivity" android:exported="false" />
         <activity android:name=".SyncSetupActivity" android:exported="false" />
         <activity android:name=".GoogleDriveFolderPickerActivity" android:exported="false" />
         <activity android:name=".FolderSyncActivity" android:exported="false" />
