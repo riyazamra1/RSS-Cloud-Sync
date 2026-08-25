@@ -17,92 +17,42 @@ class SyncPairsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivitySyncPairsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Sync Folders"
-        binding.addPairButton.setOnClickListener { addPair() }
-        renderPairs()
+        binding = ActivitySyncPairsBinding.inflate(layoutInflater); setContentView(binding.root)
+        setSupportActionBar(binding.toolbar); supportActionBar?.setDisplayHomeAsUpEnabled(true); supportActionBar?.title = "Sync Folders"
+        binding.addPairButton.setOnClickListener { addPair() }; renderPairs()
     }
-
-    override fun onResume() {
-        super.onResume()
-        if (::binding.isInitialized) renderPairs()
-    }
+    override fun onResume() { super.onResume(); if (::binding.isInitialized) renderPairs() }
 
     private fun renderPairs() {
-        val pairs = SyncPairStore.migrateLegacyIfNeeded(prefs)
-        val premium = SyncPairStore.isPremium(prefs)
+        val pairs = SyncPairStore.migrateLegacyIfNeeded(prefs); val premium = SyncPairStore.isPremium(prefs)
         binding.planText.text = if (premium) "PREMIUM • Unlimited folder pairs" else "FREE • 1 folder pair"
         binding.summaryText.text = if (premium) "All enabled pairs are included when you press Sync Now." else "Free includes one enabled folder pair. Upgrade to Premium for multiple pairs."
         binding.pairsContainer.removeAllViews()
         if (pairs.isEmpty()) {
-            val empty = TextView(this).apply {
-                text = "No folder pairs yet.\n\nCreate your first pair to start syncing."
-                textSize = 15f
-                setTextColor(Color.DKGRAY)
-                gravity = Gravity.CENTER
-                setPadding(16, 80, 16, 80)
-            }
-            binding.pairsContainer.addView(empty)
+            val card = MaterialCardView(this).apply { radius = 22.dp().toFloat(); strokeWidth = 1.dp(); strokeColor = 0xFFE1E4EC.toInt(); setCardBackgroundColor(Color.WHITE); cardElevation = 0f; layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = 10.dp(); bottomMargin = 14.dp() } }
+            val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL; setPadding(22.dp(), 28.dp(), 22.dp(), 28.dp()) }
+            box.addView(TextView(this).apply { text = "☁️  ↔  📁"; textSize = 34f; gravity = Gravity.CENTER; setTextColor(0xFF7C4DFF.toInt()) })
+            box.addView(TextView(this).apply { text = "No folder pairs yet"; textSize = 19f; setTypeface(typeface, android.graphics.Typeface.BOLD); setTextColor(0xFF252B3A.toInt()); gravity = Gravity.CENTER; setPadding(0, 10.dp(), 0, 0) })
+            box.addView(TextView(this).apply { text = "Choose a cloud account, a remote folder and a device folder to create your first sync pair."; textSize = 13f; setTextColor(0xFF687080.toInt()); gravity = Gravity.CENTER; setPadding(0, 7.dp(), 0, 14.dp()) })
+            box.addView(MaterialButton(this).apply { text = "＋  CREATE FOLDER PAIR"; isAllCaps = false; setOnClickListener { addPair() } })
+            card.addView(box); binding.pairsContainer.addView(card)
         } else pairs.forEach { pair -> addPairCard(pair) }
-        binding.addPairButton.isEnabled = premium || pairs.isEmpty()
-        binding.addPairButton.text = if (binding.addPairButton.isEnabled) "＋  ADD FOLDER PAIR" else "★  UPGRADE FOR MORE PAIRS"
+        binding.addPairButton.isEnabled = premium || pairs.isEmpty(); binding.addPairButton.text = if (binding.addPairButton.isEnabled) "＋  ADD FOLDER PAIR" else "★  UPGRADE FOR MORE PAIRS"
     }
 
     private fun addPairCard(pair: SyncPairStore.Pair) {
-        val card = MaterialCardView(this).apply {
-            radius = 18f * resources.displayMetrics.density
-            strokeWidth = (1 * resources.displayMetrics.density).toInt()
-            strokeColor = 0xFFE1E4EC.toInt()
-            setCardBackgroundColor(Color.WHITE)
-            cardElevation = 0f
-            layoutParams = LinearLayout.LayoutParams(-1, LinearLayout.LayoutParams.WRAP_CONTENT).apply { bottomMargin = 12.dp() }
-        }
+        val card = MaterialCardView(this).apply { radius = 18.dp().toFloat(); strokeWidth = 1.dp(); strokeColor = 0xFFE1E4EC.toInt(); setCardBackgroundColor(Color.WHITE); cardElevation = 0f; layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 12.dp() } }
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(18.dp(), 15.dp(), 18.dp(), 15.dp()) }
-        val title = TextView(this).apply {
-            text = if (pair.enabled) "●  ${pair.name}" else "○  ${pair.name}"
-            textSize = 17f
-            setTextColor(if (pair.enabled) 0xFF1F8E55.toInt() else 0xFF707784.toInt())
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-        }
-        val account = TextView(this).apply {
-            text = when {
-                pair.provider == "Google Drive" && pair.accountEmail.isNotBlank() -> "Google Drive • ${pair.accountEmail}"
-                pair.provider.isNotBlank() -> pair.provider
-                else -> "Cloud account not selected"
-            }
-            textSize = 12f; setTextColor(0xFF687080.toInt()); setPadding(0, 5.dp(), 0, 0)
-        }
-        val paths = TextView(this).apply {
-            text = "Cloud: ${pair.remoteFolderName.ifBlank { "Not selected" }}\nDevice: ${if (pair.selectedFiles.isNotEmpty()) "${pair.selectedFiles.size} individual files" else pair.localFolderUri.ifBlank { "Not selected" }}"
-            textSize = 12f; setTextColor(0xFF4B5260.toInt()); setPadding(0, 8.dp(), 0, 0)
-        }
-        val method = TextView(this).apply {
-            text = "${pair.direction}  •  ${if (pair.enabled) "Enabled" else "Disabled"}"
-            textSize = 12f; setTextColor(0xFF687080.toInt()); setPadding(0, 5.dp(), 0, 10.dp())
-        }
+        box.addView(TextView(this).apply { text = if (pair.enabled) "●  ${pair.name}" else "○  ${pair.name}"; textSize = 17f; setTextColor(if (pair.enabled) 0xFF1F8E55.toInt() else 0xFF707784.toInt()); setTypeface(typeface, android.graphics.Typeface.BOLD) })
+        box.addView(TextView(this).apply { text = when { pair.provider == "Google Drive" && pair.accountEmail.isNotBlank() -> "Google Drive • ${pair.accountEmail}"; pair.provider.isNotBlank() -> pair.provider; else -> "Cloud account not selected" }; textSize = 12f; setTextColor(0xFF687080.toInt()); setPadding(0, 5.dp(), 0, 0) })
+        box.addView(TextView(this).apply { text = "Cloud: ${pair.remoteFolderName.ifBlank { "Not selected" }}\nDevice: ${if (pair.selectedFiles.isNotEmpty()) "${pair.selectedFiles.size} individual files" else pair.localFolderUri.ifBlank { "Not selected" }}"; textSize = 12f; setTextColor(0xFF4B5260.toInt()); setPadding(0, 8.dp(), 0, 0) })
+        box.addView(TextView(this).apply { text = "${pair.direction}  •  ${if (pair.enabled) "Enabled" else "Disabled"}"; textSize = 12f; setTextColor(0xFF687080.toInt()); setPadding(0, 5.dp(), 0, 10.dp()) })
         val actions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.END }
-        actions.addView(MaterialButton(this).apply { text = "EDIT"; setOnClickListener { editPair(pair.id) } })
-        actions.addView(MaterialButton(this).apply { text = "DELETE"; setOnClickListener { deletePair(pair.id) } })
-        box.addView(title); box.addView(account); box.addView(paths); box.addView(method); box.addView(actions)
-        card.addView(box); binding.pairsContainer.addView(card)
+        actions.addView(MaterialButton(this).apply { text = "EDIT"; setOnClickListener { editPair(pair.id) } }); actions.addView(MaterialButton(this).apply { text = "DELETE"; setOnClickListener { deletePair(pair.id) } })
+        box.addView(actions); card.addView(box); binding.pairsContainer.addView(card)
     }
-
-    private fun addPair() {
-        val pairs = SyncPairStore.all(prefs)
-        if (!SyncPairStore.isPremium(prefs) && pairs.isNotEmpty()) {
-            startActivity(Intent(this, PremiumActivity::class.java)); return
-        }
-        prefs.edit().remove("folder_pair_name").remove("google_drive_target_folder_id").remove("google_drive_target_folder_name").remove("sync_folder_uri").remove("selected_local_files").putBoolean("folder_pair_enabled", true).apply()
-        startActivity(Intent(this, SyncSetupActivity::class.java).putExtra("new_pair", true))
-    }
-
-    private fun editPair(id: String) {
-        if (SyncPairStore.load(prefs, id)) startActivity(Intent(this, SyncSetupActivity::class.java).putExtra("pair_id", id))
-    }
-
+    private fun addPair() { val pairs = SyncPairStore.all(prefs); if (!SyncPairStore.isPremium(prefs) && pairs.isNotEmpty()) { startActivity(Intent(this, PremiumActivity::class.java)); return }; prefs.edit().remove("folder_pair_name").remove("google_drive_target_folder_id").remove("google_drive_target_folder_name").remove("sync_folder_uri").remove("selected_local_files").putBoolean("folder_pair_enabled", true).apply(); startActivity(Intent(this, SyncSetupActivity::class.java).putExtra("new_pair", true)) }
+    private fun editPair(id: String) { if (SyncPairStore.load(prefs, id)) startActivity(Intent(this, SyncSetupActivity::class.java).putExtra("pair_id", id)) }
     private fun deletePair(id: String) { SyncPairStore.delete(prefs, id); renderPairs() }
     private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()
     override fun onSupportNavigateUp(): Boolean { finish(); return true }
