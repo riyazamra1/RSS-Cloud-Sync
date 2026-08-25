@@ -5,8 +5,10 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
 import com.google.android.material.button.MaterialButton
@@ -24,7 +26,6 @@ class SyncPairsActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Sync Folders"
-        binding.addPairButton.setOnClickListener { addPair() }
         renderPairs()
     }
 
@@ -42,16 +43,12 @@ class SyncPairsActivity : AppCompatActivity() {
 
         if (pairs.isEmpty()) {
             val card = MaterialCardView(this).apply {
-                radius = 22.dp().toFloat()
-                strokeWidth = 1.dp()
-                strokeColor = 0xFFE1E4EC.toInt()
-                setCardBackgroundColor(Color.WHITE)
-                cardElevation = 0f
+                radius = 22.dp().toFloat(); strokeWidth = 1.dp(); strokeColor = 0xFFE1E4EC.toInt()
+                setCardBackgroundColor(Color.WHITE); cardElevation = 0f
                 layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = 10.dp(); bottomMargin = 14.dp() }
             }
             val box = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER_HORIZONTAL
+                orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL
                 setPadding(22.dp(), 28.dp(), 22.dp(), 28.dp())
             }
             box.addView(TextView(this).apply { text = "☁️  ↔  📁"; textSize = 34f; gravity = Gravity.CENTER; setTextColor(0xFF7C4DFF.toInt()) })
@@ -64,25 +61,21 @@ class SyncPairsActivity : AppCompatActivity() {
             pairs.forEach { addPairCard(it) }
         }
 
-        binding.addPairButton.isEnabled = premium || pairs.isEmpty()
-        binding.addPairButton.text = if (binding.addPairButton.isEnabled) "＋  ADD FOLDER PAIR" else "★  UPGRADE FOR MORE PAIRS"
+        // There is intentionally no second bottom ADD/UPGRADE button. The empty state
+        // already has CREATE FOLDER PAIR, while the normal list uses the drawer Premium action.
+        binding.addPairButton.visibility = android.view.View.GONE
     }
 
     private fun addPairCard(pair: SyncPairStore.Pair) {
         val card = MaterialCardView(this).apply {
-            radius = 18.dp().toFloat()
-            strokeWidth = 1.dp()
-            strokeColor = 0xFFE1E4EC.toInt()
-            setCardBackgroundColor(Color.WHITE)
-            cardElevation = 0f
+            radius = 18.dp().toFloat(); strokeWidth = 1.dp(); strokeColor = 0xFFE1E4EC.toInt()
+            setCardBackgroundColor(Color.WHITE); cardElevation = 0f
             layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 12.dp() }
         }
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(18.dp(), 15.dp(), 18.dp(), 15.dp()) }
         box.addView(TextView(this).apply {
             text = if (pair.enabled) "●  ${pair.name}" else "○  ${pair.name}"
-            textSize = 17f
-            setTextColor(if (pair.enabled) 0xFF1F8E55.toInt() else 0xFF707784.toInt())
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            textSize = 17f; setTextColor(if (pair.enabled) 0xFF1F8E55.toInt() else 0xFF707784.toInt()); setTypeface(typeface, android.graphics.Typeface.BOLD)
         })
         box.addView(TextView(this).apply {
             text = when {
@@ -90,29 +83,34 @@ class SyncPairsActivity : AppCompatActivity() {
                 pair.provider.isNotBlank() -> pair.provider
                 else -> "Cloud account not selected"
             }
-            textSize = 12f
-            setTextColor(0xFF687080.toInt())
-            setPadding(0, 5.dp(), 0, 0)
+            textSize = 12f; setTextColor(0xFF687080.toInt()); setPadding(0, 5.dp(), 0, 0)
         })
         val localName = localFolderName(pair.localFolderUri)
         val remote = pair.remoteFolderName.ifBlank { "Remote folder not selected" }
         val local = if (pair.selectedFiles.isNotEmpty()) "${pair.selectedFiles.size} individual file(s)" else localName
         box.addView(TextView(this).apply {
             text = "Remote folder\n$remote\n\nLocal folder\n$local"
-            textSize = 12f
-            setTextColor(0xFF4B5260.toInt())
-            setPadding(0, 8.dp(), 0, 0)
+            textSize = 12f; setTextColor(0xFF4B5260.toInt()); setPadding(0, 8.dp(), 0, 0)
         })
         box.addView(TextView(this).apply {
             text = "Sync method: ${pair.direction}\n${if (pair.enabled) "Enabled" else "Disabled"}"
-            textSize = 12f
-            setTextColor(0xFF687080.toInt())
-            setPadding(0, 7.dp(), 0, 10.dp())
+            textSize = 12f; setTextColor(0xFF687080.toInt()); setPadding(0, 7.dp(), 0, 10.dp())
         })
-        val actions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.END }
-        actions.addView(MaterialButton(this).apply { text = "EDIT"; setOnClickListener { editPair(pair.id) } })
-        actions.addView(MaterialButton(this).apply { text = "DELETE"; setOnClickListener { deletePair(pair.id) } })
-        box.addView(actions)
+        val actions = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.END
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        val edit = MaterialButton(this).apply {
+            text = "EDIT"; isAllCaps = false; isEnabled = true; isClickable = true
+            layoutParams = LinearLayout.LayoutParams(0, 44.dp(), 1f).apply { marginEnd = 6.dp() }
+            setOnClickListener { editPair(pair.id) }
+        }
+        val delete = MaterialButton(this).apply {
+            text = "DELETE"; isAllCaps = false; isEnabled = true; isClickable = true
+            layoutParams = LinearLayout.LayoutParams(0, 44.dp(), 1f).apply { marginStart = 6.dp() }
+            setOnClickListener { confirmDelete(pair) }
+        }
+        actions.addView(edit); actions.addView(delete); box.addView(actions)
         card.addView(box)
         binding.pairsContainer.addView(card)
     }
@@ -136,9 +134,16 @@ class SyncPairsActivity : AppCompatActivity() {
         if (SyncPairStore.load(prefs, id)) startActivity(Intent(this, SyncSetupActivity::class.java).putExtra("pair_id", id))
     }
 
-    private fun deletePair(id: String) {
-        SyncPairStore.delete(prefs, id)
-        renderPairs()
+    private fun confirmDelete(pair: SyncPairStore.Pair) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete folder pair?")
+            .setMessage("${pair.name} will be removed from your saved sync pairs. Your local and cloud files will not be deleted.")
+            .setNegativeButton("CANCEL", null)
+            .setPositiveButton("DELETE") { _, _ ->
+                SyncPairStore.delete(prefs, pair.id)
+                renderPairs()
+            }
+            .show()
     }
 
     private fun Int.dp() = (this * resources.displayMetrics.density).toInt()
