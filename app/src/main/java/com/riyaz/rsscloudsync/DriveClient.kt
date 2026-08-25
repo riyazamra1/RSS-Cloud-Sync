@@ -1,6 +1,8 @@
 package com.riyaz.rsscloudsync
 
 import android.content.Context
+import android.net.Uri
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.OutputStream
@@ -11,14 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class DriveClient(private val context: Context) {
-    data class Entry(
-        val id: String,
-        val name: String,
-        val mimeType: String,
-        val size: Long,
-        val modified: Long,
-        val parentId: String
-    )
+    data class Entry(val id: String, val name: String, val mimeType: String, val size: Long, val modified: Long, val parentId: String)
 
     companion object {
         const val FOLDER_MIME = "application/vnd.google-apps.folder"
@@ -58,7 +53,7 @@ class DriveClient(private val context: Context) {
             val suffix = pageToken?.let { "&pageToken=${enc(it)}" } ?: ""
             val url = "https://www.googleapis.com/drive/v3/files?q=$query&pageSize=1000&fields=nextPageToken,files(id,name,mimeType,size,modifiedTime,parents)&orderBy=folder,name$suffix"
             val json = JSONObject(String(request("GET", url)))
-            val files = json.optJSONArray("files") ?: org.json.JSONArray()
+            val files = json.optJSONArray("files") ?: JSONArray()
             for (i in 0 until files.length()) {
                 val file = files.getJSONObject(i)
                 output += Entry(file.getString("id"), file.optString("name"), file.optString("mimeType"), file.optLong("size", 0L), parseTime(file.optString("modifiedTime")), parentId)
@@ -68,23 +63,42 @@ class DriveClient(private val context: Context) {
         return output
     }
 
+    fun findChild(parentId: String, name: String): Entry? = listChildren(parentId).firstOrNull { it.name == name }
+
+    fun createFolder(parentId: String, name: String): String {
+        val existing = findChild(parentId, name)
+        if (existing != null) {
+            if (existing.mimeType != FOLDER_MIME) throw IllegalStateException("Drive item '$name' is not a folder")
+            return existing.id
+        }
+        val metadata = JSONObject().apply {
+            put("name", name)
+            put("mimeType", FOLDER_MIME)
+            put("parents", JSONArray().put(parentId))
+        }.toString().toByteArray()
+        return JSONObject(String(request("POST", "https://www.googleapis.com/drive/v3/files?fields=id,name,mimeType,parents", metadata, "application/json; charset=UTF-8"))).getString("id")
+    }
+
+    fun ensureFolderPath(rootId: String, path: String): String {
+        var current = rootId
+        for (part in path.split('/').filter { it.isNotBlank() }) current = createFolder(current, part)
+        return current
+    }
+
     fun quotaText(): String {
         val quota = JSONObject(String(request("GET", "https://www.googleapis.com/drive/v3/about?fields=storageQuota"))).optJSONObject("storageQuota") ?: return "Connected"
         val limit = quota.optLong("limit", -1L)
         val usage = quota.optLong("usage", 0L)
-        return if (limit > 0) {
-            "Used: ${formatBytes(usage)} • Free: ${formatBytes((limit - usage).coerceAtLeast(0L))} • Total: ${formatBytes(limit)}"
-        } else {
-            "Used: ${formatBytes(usage)} • Total: Unlimited"
-        }
+        return if (limit > 0) "Used: ${formatBytes(usage)} • Free: ${formatBytes((limit - usage).coerceAtLeast(0L))} • Total: ${formatBytes(limit)}"
+        else "Used: ${formatBytes(usage)} • Total: Unlimited"
     }
 
-    fun upload(uri: android.net.Uri, parentId: String, name: String, mime: String, onBytes: ((Long) -> Unit)? = null): Long {
+    fun upload(uri: Uri, parentId: String, name: String, mime: String, onBytes: ((Long) -> Unit)? = null): Long {
         val boundary = "rss-${System.currentTimeMillis()}"
         val metadata = JSONObject().apply {
             put("name", name)
             put("mimeType", mime)
-            put("parents", org.json.JSONArray().put(parentId))
+            put("parents", JSONArray().put(parentId))
         }.toString()
         val input = context.contentResolver.openInputStream(uri) ?: error("Cannot open local file")
         val connection = URL("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,size,mimeType").openConnection() as HttpURLConnection
@@ -138,15 +152,10 @@ class DriveClient(private val context: Context) {
         return total
     }
 
-    fun delete(id: String) {
-        request("DELETE", "https://www.googleapis.com/drive/v3/files/${enc(id)}")
-    }
+    fun delete(id: String) { request("DELETE", "https://www.googleapis.com/drive/v3/files/${enc(id)}") }
 
     private fun enc(value: String) = URLEncoder.encode(value, "UTF-8")
-
-    private fun parseTime(value: String): Long = try {
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US).parse(value)?.time ?: 0L
-    } catch (_: Exception) { 0L }
+    private fun parseTime(value: String): Long = try { SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US).parse(value)?.time ?: 0L } catch (_: Exception) { 0L }
 
     private fun formatBytes(value: Long): String {
         if (value < 1024L) return "$value B"
