@@ -17,7 +17,7 @@ android {
     buildFeatures { buildConfig = true; viewBinding = true }
     lint { checkReleaseBuilds = false }
     signingConfigs { if (hasValidSigningProps) { create("release") { storeFile=rootProject.file(keystoreProps["storeFile"] as String); storePassword=keystoreProps["storePassword"] as String; keyAlias=keystoreProps["keyAlias"] as String; keyPassword=keystoreProps["keyPassword"] as String } } }
-    defaultConfig { applicationId="com.riyaz.rsscloudsync"; minSdk=21; targetSdk=36; versionCode=8; versionName="1.8"; vectorDrawables { useSupportLibrary=true } }
+    defaultConfig { applicationId="com.riyaz.rsscloudsync"; minSdk=23; targetSdk=36; versionCode=8; versionName="1.8"; vectorDrawables { useSupportLibrary=true } }
     compileOptions { sourceCompatibility=JavaVersion.VERSION_17; targetCompatibility=JavaVersion.VERSION_17 }
     buildTypes { release { if (hasValidSigningProps) signingConfig=signingConfigs.getByName("release"); isMinifyEnabled=true; proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"),"proguard-rules.pro") } }
     composeOptions { kotlinCompilerExtensionVersion="1.5.10" }
