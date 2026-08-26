@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         setupDrawer()
         setupBottomNavigation()
         applyAppearance()
-        compactDashboard()
+        refineDashboard()
         refreshDashboard()
     }
 
@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         if (::binding.isInitialized) {
             applyAppearance()
-            compactDashboard()
+            refineDashboard()
             refreshDashboard()
         }
     }
@@ -93,8 +93,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun styleGradient(button: MaterialButton) {
-        button.background = gradient(intArrayOf(Color.rgb(124, 61, 237), Color.rgb(38, 181, 235)), 50f)
+        button.background = gradient(intArrayOf(Color.rgb(112, 74, 235), Color.rgb(43, 177, 232)), 14f)
         button.setTextColor(Color.WHITE)
+        button.strokeWidth = 0
+        button.minHeight = dp(28)
+        button.setPadding(dp(12), 0, dp(12), 0)
     }
 
     private fun setupNavigation() {
@@ -147,21 +150,53 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun compactDashboard() {
+    /** Applies the compact visual system without changing the functional view hierarchy. */
+    private fun refineDashboard() {
         if (!::binding.isInitialized) return
         val density = resources.displayMetrics.density
-        val compactTop = (6 * density).toInt()
-        for (i in 1 until binding.contentLayout.childCount) {
-            val child = binding.contentLayout.getChildAt(i)
+        val content = binding.contentLayout
+        content.setPadding(dp(14), 0, dp(14), dp(10))
+
+        // Tight, consistent vertical rhythm.
+        for (i in 1 until content.childCount) {
+            val child = content.getChildAt(i)
             val lp = child.layoutParams as? ViewGroup.MarginLayoutParams ?: continue
-            if (lp.topMargin > compactTop) {
-                lp.topMargin = when (i) {
-                    1 -> 0
-                    else -> compactTop
-                }
-                child.layoutParams = lp
+            lp.topMargin = when (i) {
+                1 -> 0
+                else -> dp(8)
             }
+            child.layoutParams = lp
         }
+
+        binding.toolbar.layoutParams = binding.toolbar.layoutParams.apply { height = dp(52) }
+        binding.premiumBanner.layoutParams = binding.premiumBanner.layoutParams.apply { height = dp(156) }
+        binding.syncStatusCard.layoutParams = binding.syncStatusCard.layoutParams.apply { height = dp(178) }
+        binding.gradientProgress.layoutParams = binding.gradientProgress.layoutParams.apply { width = dp(78); height = dp(78) }
+        binding.syncNowButton.layoutParams = binding.syncNowButton.layoutParams.apply { height = dp(38) }
+        binding.syncNowButton.cornerRadius = dp(19)
+        binding.syncNowButton.setTextSize(10f)
+
+        // Keep cloud accounts horizontally browsable but substantially lighter.
+        binding.cloudAccountsScroll.layoutParams = binding.cloudAccountsScroll.layoutParams.apply { height = dp(136) }
+        for (i in 0 until binding.cloudProviderRow.childCount) {
+            val card = binding.cloudProviderRow.getChildAt(i)
+            card.layoutParams = card.layoutParams.apply {
+                height = dp(130)
+                width = dp(138)
+            }
+            (card as? MaterialCardView)?.radius = dp(16).toFloat()
+            findButtons(card).forEach { it.minHeight = dp(26); it.cornerRadius = dp(13) }
+        }
+
+        // Slightly smaller secondary typography keeps the dashboard information-dense.
+        binding.syncStatusText.setTextSize(14f)
+        binding.syncSubtitle.setTextSize(9f)
+        binding.lastSyncText.setTextSize(8f)
+        binding.cloudStorageSubtitle.setTextSize(11f)
+        binding.cloudSwipeHint.setTextSize(9f)
+
+        // Avoid accidental oversized child layouts inherited from older versions.
+        density.hashCode() // keep density local for the layout pass above
     }
 
     private fun applyAppearance() {
@@ -171,11 +206,12 @@ class MainActivity : AppCompatActivity() {
             "light" -> false
             else -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         }
-        val bg = if (dark) Color.rgb(7, 11, 20) else Color.rgb(247, 248, 252)
-        val surface = if (dark) Color.rgb(15, 22, 36) else Color.WHITE
-        val outline = if (dark) Color.rgb(38, 51, 73) else Color.rgb(225, 228, 236)
-        val text = if (dark) Color.WHITE else Color.rgb(37, 43, 58)
-        val secondary = if (dark) Color.rgb(154, 167, 188) else Color.rgb(111, 119, 137)
+        val bg = if (dark) Color.rgb(7, 11, 20) else Color.rgb(247, 249, 253)
+        val surface = if (dark) Color.rgb(14, 21, 34) else Color.WHITE
+        val outline = if (dark) Color.rgb(38, 51, 73) else Color.rgb(225, 229, 237)
+        val text = if (dark) Color.WHITE else Color.rgb(31, 38, 54)
+        val secondary = if (dark) Color.rgb(154, 167, 188) else Color.rgb(103, 113, 132)
+
         binding.root.setBackgroundColor(bg)
         binding.mainScrollView.setBackgroundColor(bg)
         binding.toolbar.setTitleTextColor(text)
@@ -184,14 +220,28 @@ class MainActivity : AppCompatActivity() {
         binding.syncStatusText.setTextColor(text)
         binding.syncSubtitle.setTextColor(secondary)
         binding.lastSyncText.setTextColor(secondary)
+
         listOf(binding.syncStatusCard, binding.foldersCard, binding.syncSetupCard).forEach { styleCard(it, surface, outline) }
-        for (i in 0 until binding.cloudProviderRow.childCount) (binding.cloudProviderRow.getChildAt(i) as? MaterialCardView)?.let { styleCard(it, surface, outline) }
-        binding.premiumBanner.background = gradient(intArrayOf(Color.rgb(72, 39, 177), Color.rgb(39, 119, 225)), 22f)
+        for (i in 0 until binding.cloudProviderRow.childCount) {
+            (binding.cloudProviderRow.getChildAt(i) as? MaterialCardView)?.let { styleCard(it, surface, outline) }
+        }
+
+        binding.premiumBanner.background = gradient(
+            if (dark) intArrayOf(Color.rgb(54, 39, 123), Color.rgb(30, 104, 172))
+            else intArrayOf(Color.rgb(80, 58, 180), Color.rgb(37, 139, 205)), 20f
+        )
+
         listOf(binding.lightButton, binding.systemButton, binding.darkButton).forEach { button ->
-            val selected = when (mode) { "light" -> button == binding.lightButton; "dark" -> button == binding.darkButton; else -> button == binding.systemButton }
-            button.background = if (selected) gradient(intArrayOf(Color.rgb(125, 49, 235), Color.rgb(39, 190, 235)), 50f) else solid(Color.TRANSPARENT, 50f)
+            val selected = when (mode) {
+                "light" -> button == binding.lightButton
+                "dark" -> button == binding.darkButton
+                else -> button == binding.systemButton
+            }
+            button.background = if (selected) gradient(intArrayOf(Color.rgb(112, 74, 235), Color.rgb(43, 177, 232)), 50f)
+            else solid(Color.TRANSPARENT, 50f)
             button.setTextColor(if (selected) Color.WHITE else secondary)
         }
+
         binding.bottomNav.setBackgroundColor(surface)
         val drawerColors = intArrayOf(0xFF6C3FEA.toInt(), 0xFF4D8DFF.toInt(), 0xFF2DC9A3.toInt(), 0xFF38A6F2.toInt(), 0xFFFF9F43.toInt(), 0xFFFFC83D.toInt(), 0xFF8B5CF6.toInt(), 0xFF2AB7C9.toInt(), 0xFF7C4DFF.toInt(), 0xFFFFC83D.toInt())
         for (i in 0 until binding.navigationView.menu.size()) binding.navigationView.menu.getItem(i).icon?.let { DrawableCompat.setTint(it, drawerColors[i % drawerColors.size]) }
@@ -243,9 +293,9 @@ class MainActivity : AppCompatActivity() {
     private fun styleCard(card: MaterialCardView, surface: Int, outline: Int) {
         card.setCardBackgroundColor(surface)
         card.strokeColor = outline
-        card.strokeWidth = 1
+        card.strokeWidth = dp(1)
         card.cardElevation = 0f
-        card.radius = 20f * resources.displayMetrics.density
+        card.radius = dp(18).toFloat()
     }
 
     private fun gradient(colors: IntArray, radius: Float) = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors).apply { cornerRadius = radius * resources.displayMetrics.density }
