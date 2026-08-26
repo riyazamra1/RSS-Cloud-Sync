@@ -2,12 +2,12 @@
 <resources>
     <color name="splash_background">#070B14</color>
     <color name="app_primary">#6EA8FF</color>
-    <color name="light_background">#F4F7FB</color>
+    <color name="light_background">#FFFFFF</color>
     <color name="light_surface">#FFFFFF</color>
     <color name="light_card">#FFFFFF</color>
     <color name="light_text">#111827</color>
     <color name="light_secondary_text">#667085</color>
-    <color name="light_border">#E2E8F0</color>
+    <color name="light_border">#E5E7EB</color>
     <color name="dark_background">#070B14</color>
     <color name="dark_surface">#0D1421</color>
     <color name="dark_card">#111B2B</color>
@@ -18,4 +18,5 @@
     <color name="premium_cyan">#48D7FF</color>
     <color name="premium_violet">#8B7CFF</color>
     <color name="premium_green">#43D6A2</color>
+    <color name="notification_badge">#EF4444</color>
 </resources>
