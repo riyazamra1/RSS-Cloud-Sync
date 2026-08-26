@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/action_notifications" android:icon="@drawable/ic_notification_bell" android:title="Notifications" android:showAsAction="always" />
+    <item
+        android:id="@+id/action_notifications"
+        android:title="Notifications"
+        android:icon="@drawable/ic_notification_bell"
+        android:actionLayout="@layout/view_notification_bell"
+        android:showAsAction="always" />
 </menu>
