@@ -26,9 +26,7 @@ class ScheduledSyncWorker(
 
         val provider = prefs.getString("selected_cloud_provider", "") ?: ""
         if (provider != "Google Drive") return Result.success()
-
-        val targetId = prefs.getString("google_drive_target_folder_id", null)
-            ?: return Result.failure()
+        val targetId = prefs.getString("google_drive_target_folder_id", null) ?: return Result.failure()
         val localFolder = prefs.getString("sync_folder_uri", null)
         val files = (prefs.getStringSet("selected_local_files", emptySet()) ?: emptySet()).map(Uri::parse)
         if (localFolder.isNullOrBlank() && files.isEmpty()) return Result.failure()
@@ -58,16 +56,11 @@ class ScheduledSyncWorker(
                 engine.sync(Uri.parse(localFolder!!), targetId, direction, options)
             }
             SyncHistoryManager.add(applicationContext, SyncHistoryManager.Entry(
-                timestamp = System.currentTimeMillis(),
-                direction = directionName,
-                filesProcessed = result.processed,
-                filesChanged = result.uploaded + result.downloaded,
-                uploadedFiles = result.uploaded,
-                downloadedFiles = result.downloaded,
-                failedFiles = result.failed,
-                bytesTransferred = result.bytes,
-                durationMs = System.currentTimeMillis() - started,
-                success = result.failed == 0,
+                timestamp = System.currentTimeMillis(), direction = directionName,
+                filesProcessed = result.processed, filesChanged = result.uploaded + result.downloaded,
+                uploadedFiles = result.uploaded, downloadedFiles = result.downloaded,
+                failedFiles = result.failed, bytesTransferred = result.bytes,
+                durationMs = System.currentTimeMillis() - started, success = result.failed == 0,
                 message = if (result.failed == 0) "Scheduled sync completed" else "Scheduled sync completed with warnings"
             ))
             Result.success()
@@ -94,14 +87,23 @@ class ScheduledSyncWorker(
                 .setInputData(androidx.work.workDataOf(KEY_PAIR_ID to pairId))
                 .build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                UNIQUE_PREFIX + pairId,
-                ExistingPeriodicWorkPolicy.UPDATE,
-                request
+                UNIQUE_PREFIX + pairId, ExistingPeriodicWorkPolicy.UPDATE, request
             )
         }
 
         fun cancel(context: Context, pairId: String) {
             WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_PREFIX + pairId)
+        }
+
+        fun ensureScheduledForSavedPairs(context: Context) {
+            val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            SyncPairStore.all(prefs).forEach { pair ->
+                if (pair.enabled && prefs.getString("schedule_mode", "Save only") == "Schedule now") {
+                    schedule(context, pair.id)
+                } else {
+                    cancel(context, pair.id)
+                }
+            }
         }
     }
 }
