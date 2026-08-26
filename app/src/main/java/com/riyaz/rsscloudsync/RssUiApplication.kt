@@ -2,6 +2,7 @@ package com.riyaz.rsscloudsync
 
 import android.app.Activity
 import android.app.Application
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -17,9 +18,22 @@ import com.google.android.material.navigation.NavigationView
 
 /** Existing dashboard polish layer. Keeps the current project intact. */
 class RssUiApplication : Application() {
+    private lateinit var syncPrefs: SharedPreferences
+
     override fun onCreate() {
         super.onCreate()
+        syncPrefs = getSharedPreferences("rss_cloud_sync", MODE_PRIVATE)
         ScheduledSyncWorker.ensureScheduledForSavedPairs(this)
+        syncPrefs.registerOnSharedPreferenceChangeListener { prefs, key ->
+            if (key == "schedule_mode" || key == "active_pair_id" || key == "folder_pair_enabled") {
+                val pairId = prefs.getString("active_pair_id", null)
+                if (pairId != null && prefs.getString("schedule_mode", "Save only") == "Schedule now" && prefs.getBoolean("folder_pair_enabled", true)) {
+                    ScheduledSyncWorker.schedule(this, pairId)
+                } else if (pairId != null) {
+                    ScheduledSyncWorker.cancel(this, pairId)
+                }
+            }
+        }
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPostCreated(activity: Activity, state: Bundle?) {
                 if (activity is MainActivity) activity.window.decorView.post { polishDashboard(activity) }
@@ -46,58 +60,35 @@ class RssUiApplication : Application() {
 
         root.findViewById<ViewGroup>(id("mainScrollView"))?.setBackgroundColor(background)
         root.findViewById<NavigationView>(id("navigationView"))?.apply {
-            setBackgroundColor(surface)
-            elevation = 0f
-            itemIconTintList = null
-            menu.setGroupDividerEnabled(true)
-            setItemVerticalPadding(dp(3))
-            setItemHorizontalPadding(dp(10))
-            setItemIconPadding(dp(9))
-            setItemIconSize(dp(22))
+            setBackgroundColor(surface); elevation = 0f; itemIconTintList = null
+            menu.setGroupDividerEnabled(true); setItemVerticalPadding(dp(3)); setItemHorizontalPadding(dp(10)); setItemIconPadding(dp(9)); setItemIconSize(dp(22))
         }
         root.findViewById<BottomNavigationView>(id("bottomNav"))?.apply { itemIconTintList = null }
         root.findViewById<ViewGroup>(id("appearanceCard"))?.let { selector ->
             selector.background = GradientDrawable().apply { cornerRadius = dp(22).toFloat(); setColor(surface); setStroke(dp(1), outline) }
-            selector.layoutParams = selector.layoutParams.apply { height = dp(48) }
-            selector.requestLayout()
+            selector.layoutParams = selector.layoutParams.apply { height = dp(48) }; selector.requestLayout()
         }
-
         setHeight<MaterialCardView>(root, activity, "premiumBanner", 184)
         setHeight<MaterialCardView>(root, activity, "syncStatusCard", 204)
         setHeight<MaterialCardView>(root, activity, "foldersCard", 88)
         setHeight<MaterialCardView>(root, activity, "syncSetupCard", 88)
         setHeight<ViewGroup>(root, activity, "cloudAccountsScroll", 158)
         setHeight<BottomNavigationView>(root, activity, "bottomNav", 66)
-
         root.findViewById<ViewGroup>(id("contentLayout"))?.let { content ->
             for (i in 0 until content.childCount) {
-                val child = content.getChildAt(i)
-                val lp = child.layoutParams
-                if (lp is ViewGroup.MarginLayoutParams && lp.topMargin > dp(10)) {
-                    lp.topMargin = dp(8)
-                    child.layoutParams = lp
-                }
+                val child = content.getChildAt(i); val lp = child.layoutParams
+                if (lp is ViewGroup.MarginLayoutParams && lp.topMargin > dp(10)) { lp.topMargin = dp(8); child.layoutParams = lp }
             }
         }
-
         root.findViewById<ViewGroup>(id("cloudProviderRow"))?.let { row ->
-            for (i in 0 until row.childCount) {
-                row.getChildAt(i).layoutParams = row.getChildAt(i).layoutParams.apply { width = dp(142); height = dp(154) }
-                row.getChildAt(i).requestLayout()
-            }
+            for (i in 0 until row.childCount) { row.getChildAt(i).layoutParams = row.getChildAt(i).layoutParams.apply { width = dp(142); height = dp(154) }; row.getChildAt(i).requestLayout() }
         }
-        root.findViewById<MaterialButton>(id("syncNowButton"))?.let {
-            it.layoutParams = it.layoutParams.apply { width = ViewGroup.LayoutParams.MATCH_PARENT; height = dp(44) }
-            it.requestLayout()
-        }
-
+        root.findViewById<MaterialButton>(id("syncNowButton"))?.let { it.layoutParams = it.layoutParams.apply { width = ViewGroup.LayoutParams.MATCH_PARENT; height = dp(44) }; it.requestLayout() }
         root.findViewById<Toolbar>(id("toolbar"))?.let { toolbar ->
             if (toolbar.menu.findItem(R.id.action_notifications) == null) {
                 toolbar.inflateMenu(R.menu.main_toolbar_menu)
                 toolbar.setOnMenuItemClickListener { item: MenuItem ->
-                    if (item.itemId == R.id.action_notifications) {
-                        activity.startActivity(android.content.Intent(activity, NotificationsActivity::class.java)); true
-                    } else false
+                    if (item.itemId == R.id.action_notifications) { activity.startActivity(android.content.Intent(activity, NotificationsActivity::class.java)); true } else false
                 }
             }
         }
@@ -105,8 +96,7 @@ class RssUiApplication : Application() {
 
     private inline fun <reified T : ViewGroup> setHeight(root: View, activity: Activity, idName: String, heightDp: Int) {
         root.findViewById<T>(activity.resources.getIdentifier(idName, "id", activity.packageName))?.let { view ->
-            view.layoutParams = view.layoutParams.apply { height = (heightDp * activity.resources.displayMetrics.density).toInt() }
-            view.requestLayout()
+            view.layoutParams = view.layoutParams.apply { height = (heightDp * activity.resources.displayMetrics.density).toInt() }; view.requestLayout()
         }
     }
 }
