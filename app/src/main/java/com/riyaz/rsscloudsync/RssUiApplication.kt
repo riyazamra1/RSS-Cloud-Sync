@@ -19,6 +19,7 @@ import com.google.android.material.navigation.NavigationView
 class RssUiApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        ScheduledSyncWorker.ensureScheduledForSavedPairs(this)
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPostCreated(activity: Activity, state: Bundle?) {
                 if (activity is MainActivity) activity.window.decorView.post { polishDashboard(activity) }
@@ -68,7 +69,6 @@ class RssUiApplication : Application() {
         setHeight<ViewGroup>(root, activity, "cloudAccountsScroll", 158)
         setHeight<BottomNavigationView>(root, activity, "bottomNav", 66)
 
-        // Tighten only the large section gaps. Keep internal card spacing intact.
         root.findViewById<ViewGroup>(id("contentLayout"))?.let { content ->
             for (i in 0 until content.childCount) {
                 val child = content.getChildAt(i)
