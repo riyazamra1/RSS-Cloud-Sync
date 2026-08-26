@@ -9,7 +9,6 @@ import java.util.UUID
 object SyncPairStore {
     private const val KEY = "sync_pairs"
     private const val TIER_KEY = "membership_tier"
-    private const val FREE_LIMIT = 1
 
     data class Pair(
         val id: String,
@@ -38,9 +37,7 @@ object SyncPairStore {
     fun migrateLegacyIfNeeded(prefs: SharedPreferences): List<Pair> {
         val current = all(prefs)
         if (current.isNotEmpty()) return current
-        val hasLegacy = prefs.contains("folder_pair_name") ||
-            prefs.contains("sync_folder_uri") ||
-            prefs.contains("google_drive_target_folder_id")
+        val hasLegacy = prefs.contains("folder_pair_name") || prefs.contains("sync_folder_uri") || prefs.contains("google_drive_target_folder_id")
         if (!hasLegacy) return emptyList()
         saveCurrent(prefs, null)
         return all(prefs)
@@ -69,13 +66,14 @@ object SyncPairStore {
         val set = (prefs.getStringSet(KEY, emptySet()) ?: emptySet()).toMutableSet()
         set.removeIf { decode(it)?.id == id }
         set.add(encoded)
-        prefs.edit().putStringSet(KEY, set).apply()
+        prefs.edit().putStringSet(KEY, set).putString("active_pair_id", id).apply()
         return id
     }
 
     fun load(prefs: SharedPreferences, id: String): Boolean {
         val pair = all(prefs).firstOrNull { it.id == id } ?: return false
         prefs.edit()
+            .putString("active_pair_id", pair.id)
             .putString("folder_pair_name", pair.name)
             .putString("selected_cloud_provider", pair.provider)
             .putString("google_drive_account_email", pair.accountEmail)
@@ -95,25 +93,18 @@ object SyncPairStore {
     fun delete(prefs: SharedPreferences, id: String) {
         val set = (prefs.getStringSet(KEY, emptySet()) ?: emptySet()).toMutableSet()
         set.removeIf { decode(it)?.id == id }
-        prefs.edit().putStringSet(KEY, set).apply()
+        val editor = prefs.edit().putStringSet(KEY, set)
+        if (prefs.getString("active_pair_id", null) == id) editor.remove("active_pair_id")
+        editor.apply()
     }
 
     fun count(prefs: SharedPreferences): Int = all(prefs).size
 
     private fun encode(pair: Pair): String = JSONObject().apply {
-        put("id", pair.id)
-        put("name", pair.name)
-        put("provider", pair.provider)
-        put("accountEmail", pair.accountEmail)
-        put("remoteFolderId", pair.remoteFolderId)
-        put("remoteFolderName", pair.remoteFolderName)
-        put("localFolderUri", pair.localFolderUri)
-        put("direction", pair.direction)
-        put("enabled", pair.enabled)
-        put("excludeHidden", pair.excludeHidden)
-        put("excludeSubfolders", pair.excludeSubfolders)
-        put("deleteEmpty", pair.deleteEmpty)
-        put("selectedFiles", JSONArray(pair.selectedFiles.toList()))
+        put("id", pair.id); put("name", pair.name); put("provider", pair.provider); put("accountEmail", pair.accountEmail)
+        put("remoteFolderId", pair.remoteFolderId); put("remoteFolderName", pair.remoteFolderName); put("localFolderUri", pair.localFolderUri)
+        put("direction", pair.direction); put("enabled", pair.enabled); put("excludeHidden", pair.excludeHidden)
+        put("excludeSubfolders", pair.excludeSubfolders); put("deleteEmpty", pair.deleteEmpty); put("selectedFiles", JSONArray(pair.selectedFiles.toList()))
     }.toString()
 
     private fun decode(raw: String): Pair? = try {
@@ -121,22 +112,8 @@ object SyncPairStore {
         val files = mutableSetOf<String>()
         val array = o.optJSONArray("selectedFiles")
         if (array != null) for (i in 0 until array.length()) files += array.optString(i)
-        Pair(
-            id = o.optString("id"),
-            name = o.optString("name", "My Folder Pair"),
-            provider = o.optString("provider"),
-            accountEmail = o.optString("accountEmail"),
-            remoteFolderId = o.optString("remoteFolderId"),
-            remoteFolderName = o.optString("remoteFolderName"),
-            localFolderUri = o.optString("localFolderUri"),
-            direction = o.optString("direction", "Two-way Sync"),
-            enabled = o.optBoolean("enabled", true),
-            excludeHidden = o.optBoolean("excludeHidden", true),
-            excludeSubfolders = o.optBoolean("excludeSubfolders", false),
-            deleteEmpty = o.optBoolean("deleteEmpty", false),
-            selectedFiles = files
-        )
-    } catch (_: Exception) {
-        null
-    }
+        Pair(o.optString("id"), o.optString("name", "My Folder Pair"), o.optString("provider"), o.optString("accountEmail"),
+            o.optString("remoteFolderId"), o.optString("remoteFolderName"), o.optString("localFolderUri"), o.optString("direction", "Two-way Sync"),
+            o.optBoolean("enabled", true), o.optBoolean("excludeHidden", true), o.optBoolean("excludeSubfolders", false), o.optBoolean("deleteEmpty", false), files)
+    } catch (_: Exception) { null }
 }
