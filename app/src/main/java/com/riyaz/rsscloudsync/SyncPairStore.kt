@@ -19,6 +19,7 @@ object SyncPairStore {
         val remoteFolderName: String,
         val localFolderUri: String,
         val direction: String,
+        val scheduleMode: String,
         val enabled: Boolean,
         val excludeHidden: Boolean,
         val excludeSubfolders: Boolean,
@@ -26,8 +27,7 @@ object SyncPairStore {
         val selectedFiles: Set<String>
     )
 
-    fun isPremium(prefs: SharedPreferences): Boolean =
-        prefs.getString(TIER_KEY, "FREE").equals("PREMIUM", ignoreCase = true)
+    fun isPremium(prefs: SharedPreferences): Boolean = prefs.getString(TIER_KEY, "FREE").equals("PREMIUM", ignoreCase = true)
 
     fun all(prefs: SharedPreferences): List<Pair> {
         val raw = prefs.getStringSet(KEY, emptySet()) ?: emptySet()
@@ -56,6 +56,7 @@ object SyncPairStore {
             remoteFolderName = prefs.getString("google_drive_target_folder_name", "") ?: "",
             localFolderUri = prefs.getString("sync_folder_uri", "") ?: "",
             direction = prefs.getString("sync_direction", "Two-way Sync") ?: "Two-way Sync",
+            scheduleMode = prefs.getString("schedule_mode", "Save only") ?: "Save only",
             enabled = prefs.getBoolean("folder_pair_enabled", true),
             excludeHidden = prefs.getBoolean("exclude_hidden_files", true),
             excludeSubfolders = prefs.getBoolean("exclude_subfolders", false),
@@ -81,6 +82,7 @@ object SyncPairStore {
             .putString("google_drive_target_folder_name", pair.remoteFolderName)
             .putString("sync_folder_uri", pair.localFolderUri)
             .putString("sync_direction", pair.direction)
+            .putString("schedule_mode", pair.scheduleMode)
             .putBoolean("folder_pair_enabled", pair.enabled)
             .putBoolean("exclude_hidden_files", pair.excludeHidden)
             .putBoolean("exclude_subfolders", pair.excludeSubfolders)
@@ -103,7 +105,7 @@ object SyncPairStore {
     private fun encode(pair: Pair): String = JSONObject().apply {
         put("id", pair.id); put("name", pair.name); put("provider", pair.provider); put("accountEmail", pair.accountEmail)
         put("remoteFolderId", pair.remoteFolderId); put("remoteFolderName", pair.remoteFolderName); put("localFolderUri", pair.localFolderUri)
-        put("direction", pair.direction); put("enabled", pair.enabled); put("excludeHidden", pair.excludeHidden)
+        put("direction", pair.direction); put("scheduleMode", pair.scheduleMode); put("enabled", pair.enabled); put("excludeHidden", pair.excludeHidden)
         put("excludeSubfolders", pair.excludeSubfolders); put("deleteEmpty", pair.deleteEmpty); put("selectedFiles", JSONArray(pair.selectedFiles.toList()))
     }.toString()
 
@@ -114,6 +116,7 @@ object SyncPairStore {
         if (array != null) for (i in 0 until array.length()) files += array.optString(i)
         Pair(o.optString("id"), o.optString("name", "My Folder Pair"), o.optString("provider"), o.optString("accountEmail"),
             o.optString("remoteFolderId"), o.optString("remoteFolderName"), o.optString("localFolderUri"), o.optString("direction", "Two-way Sync"),
-            o.optBoolean("enabled", true), o.optBoolean("excludeHidden", true), o.optBoolean("excludeSubfolders", false), o.optBoolean("deleteEmpty", false), files)
+            o.optString("scheduleMode", "Save only"), o.optBoolean("enabled", true), o.optBoolean("excludeHidden", true),
+            o.optBoolean("excludeSubfolders", false), o.optBoolean("deleteEmpty", false), files)
     } catch (_: Exception) { null }
 }
