@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Base.AppTheme"
-        parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/light_background</item>
+        <item name="android:colorBackground">@color/light_background</item>
+        <item name="colorSurface">@color/light_surface</item>
+        <item name="colorSurfaceVariant">@color/light_surface</item>
+        <item name="android:navigationBarColor">@color/light_background</item>
+    </style>
 
-    <style name="AppTheme"
-        parent="Base.AppTheme" />
+    <style name="AppTheme" parent="Base.AppTheme" />
 
 </resources>
