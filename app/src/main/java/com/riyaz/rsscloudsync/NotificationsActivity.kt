@@ -12,6 +12,7 @@ class NotificationsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notifications)
+        getSharedPreferences("rss_cloud_sync", MODE_PRIVATE).edit().putInt("unread_notifications", 0).apply()
         val toolbar = findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
         findViewById<View>(R.id.enableNotificationsButton).setOnClickListener { requestNotifications() }
