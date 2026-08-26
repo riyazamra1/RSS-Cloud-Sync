@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <style name="RSSCardStyle" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/light_card</item>
+        <item name="cardElevation">3dp</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+
     <style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/light_background</item>
         <item name="android:colorBackground">@color/light_background</item>
         <item name="colorSurface">@color/light_surface</item>
         <item name="colorSurfaceVariant">@color/light_surface</item>
+        <item name="materialCardViewStyle">@style/RSSCardStyle</item>
         <item name="android:navigationBarColor">@color/light_background</item>
     </style>
 
