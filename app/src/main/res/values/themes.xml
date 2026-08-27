@@ -13,6 +13,9 @@
         <item name="android:colorBackground">@color/light_background</item>
         <item name="colorSurface">@color/light_surface</item>
         <item name="colorSurfaceVariant">@color/light_surface</item>
+        <item name="colorSurfaceContainer">@color/light_card</item>
+        <item name="colorSurfaceContainerLow">@color/light_card</item>
+        <item name="colorSurfaceContainerHigh">@color/light_card</item>
         <item name="materialCardViewStyle">@style/RSSCardStyle</item>
         <item name="android:navigationBarColor">@color/light_background</item>
     </style>
