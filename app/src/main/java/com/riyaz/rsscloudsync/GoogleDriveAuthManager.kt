@@ -13,6 +13,7 @@ import com.google.android.gms.tasks.Task
 object GoogleDriveAuthManager {
     const val PROVIDER = "Google Drive"
     const val DRIVE_SCOPE = "https://www.googleapis.com/auth/drive"
+    const val AUTH_PREFS = "rss_cloud_sync"
 
     fun signInClient(context: Context) = GoogleSignIn.getClient(
         context,
@@ -31,6 +32,9 @@ object GoogleDriveAuthManager {
     fun currentAccount(context: Context): GoogleSignInAccount? =
         GoogleSignIn.getLastSignedInAccount(context)
 
+    fun hasDrivePermission(account: GoogleSignInAccount): Boolean =
+        GoogleSignIn.hasPermissions(account, Scope(DRIVE_SCOPE))
+
     fun accessToken(context: Context, account: GoogleSignInAccount): String {
         val accountObject = account.account ?: throw IllegalStateException("Google account is unavailable")
         return try {
@@ -40,9 +44,19 @@ object GoogleDriveAuthManager {
         }
     }
 
+    fun clearCachedToken(context: Context, account: GoogleSignInAccount) {
+        val accountObject = account.account ?: return
+        try {
+            val token = GoogleAuthUtil.getToken(context, accountObject, "oauth2:$DRIVE_SCOPE")
+            GoogleAuthUtil.clearToken(context, token)
+        } catch (_: Exception) {
+            // A stale/expired token will be refreshed automatically on the next request.
+        }
+    }
+
     fun switchAccount(context: Context) {
         signInClient(context).signOut()
-        context.getSharedPreferences("rss_cloud_sync", Context.MODE_PRIVATE)
+        context.getSharedPreferences(AUTH_PREFS, Context.MODE_PRIVATE)
             .edit()
             .remove("google_drive_account_email")
             .remove("google_drive_account_name")
@@ -53,7 +67,7 @@ object GoogleDriveAuthManager {
 
     fun clearConnection(context: Context) {
         switchAccount(context)
-        val prefs = context.getSharedPreferences("rss_cloud_sync", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(AUTH_PREFS, Context.MODE_PRIVATE)
         val connected = (prefs.getStringSet("connected_cloud_providers", emptySet()) ?: emptySet()).toMutableSet()
         connected.remove(PROVIDER)
         prefs.edit().putStringSet("connected_cloud_providers", connected).apply()
