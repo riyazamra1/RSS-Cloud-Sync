@@ -56,8 +56,8 @@ class GoogleDriveSyncEngine(
             processed++
             listener?.invoke(Progress(processed, files.size, uploaded, downloaded, changed, failed, bytes, path))
         }
-        if (!cancelled && direction == Direction.UPLOAD_MIRROR) for ((path, item) in remote) if (!item.directory && !local.containsKey(path)) try { drive.delete(item.entry.id); changed++ } catch (_: Exception) { failed++ }
-        if (!cancelled && direction == Direction.DOWNLOAD_MIRROR) for ((path, item) in local) if (!remote.containsKey(path)) try { deleteLocal(item.uri); changed++ } catch (_: Exception) { failed++ }
+        if (!cancelled && direction == Direction.UPLOAD_MIRROR) for ((_, item) in remote) if (!item.directory && !local.containsKey(item.path)) try { drive.delete(item.entry.id); changed++ } catch (_: Exception) { failed++ }
+        if (!cancelled && direction == Direction.DOWNLOAD_MIRROR) for ((_, item) in local) if (!remote.containsKey(item.path)) try { deleteLocal(item.uri); changed++ } catch (_: Exception) { failed++ }
         if (!cancelled && options.deleteEmptySubfolders) deleteEmptyLocalFolders(localTree)
         return Result(processed, uploaded, downloaded, changed, failed, bytes)
     }
@@ -112,8 +112,7 @@ class GoogleDriveSyncEngine(
     private fun deleteLocal(uri: Uri) { if (!DocumentsContract.deleteDocument(resolver, uri)) throw IllegalStateException("Unable to delete local file") }
     private fun deleteEmptyLocalFolders(tree: Uri) { val root = DocumentsContract.getTreeDocumentId(tree); deleteEmptyChildren(tree, root) }
     private fun deleteEmptyChildren(tree: Uri, parentId: String): Boolean {
-        var empty = true; val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId)
-        val dirs = ArrayList<String>()
+        var empty = true; val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId); val dirs = ArrayList<String>()
         resolver.query(children, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_MIME_TYPE), null, null, null)?.use { c -> val idCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID); val mimeCol = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE); while (c.moveToNext()) { val id = c.getString(idCol); if (c.getString(mimeCol) == DocumentsContract.Document.MIME_TYPE_DIR) dirs.add(id) else empty = false } }
         for (id in dirs) { if (deleteEmptyChildren(tree, id)) try { DocumentsContract.deleteDocument(resolver, DocumentsContract.buildDocumentUriUsingTree(tree, id)) } catch (_: Exception) {} else empty = false }
         return empty
