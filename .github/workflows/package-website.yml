@@ -1,0 +1,28 @@
+name: Package Website for aaPanel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package website
+        run: |
+          cd website
+          zip -r ../Razeen-Secure-Solution-Website-aapanel.zip . -x '*.git*'
+
+      - name: Upload website ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Razeen-Secure-Solution-Website-aapanel
+          path: Razeen-Secure-Solution-Website-aapanel.zip
+          retention-days: 7
