@@ -2,6 +2,7 @@ package com.riyaz.rsscloudsync
 
 import android.content.Context
 import android.net.Uri
+import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -56,7 +57,7 @@ class ScheduledSyncWorker(appContext: Context, workerParams: WorkerParameters) :
         } catch (_: Exception) {
             SyncHistoryManager.add(applicationContext, SyncHistoryManager.Entry(
                 timestamp = System.currentTimeMillis(), direction = directionName, filesProcessed = 0, filesChanged = 0, failedFiles = 1,
-                bytesTransferred = 0, durationMs = System.currentTimeMillis() - started, success = false, message = "Scheduled sync failed"
+                bytesTransferred = 0, durationMs = System.currentTimeMillis() - started, success = false, message = "Scheduled sync failed; retry scheduled"
             ))
             Result.retry()
         }
@@ -70,7 +71,9 @@ class ScheduledSyncWorker(appContext: Context, workerParams: WorkerParameters) :
         fun schedule(context: Context, pairId: String) {
             val request = PeriodicWorkRequestBuilder<ScheduledSyncWorker>(1, TimeUnit.HOURS)
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
-                .setInputData(androidx.work.workDataOf(KEY_PAIR_ID to pairId)).build()
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+                .setInputData(androidx.work.workDataOf(KEY_PAIR_ID to pairId))
+                .build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(UNIQUE_PREFIX + pairId, ExistingPeriodicWorkPolicy.UPDATE, request)
         }
         fun cancel(context: Context, pairId: String) { WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_PREFIX + pairId) }
