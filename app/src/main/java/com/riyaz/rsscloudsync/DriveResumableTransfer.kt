@@ -5,6 +5,7 @@ import android.net.Uri
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedInputStream
+import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -91,7 +92,6 @@ class DriveResumableTransfer(
                 var attempt = 0
                 while (acknowledged < chunkStart + read) {
                     if (isCancelled?.invoke() == true) throw TransferCancelledException()
-
                     val offsetInBuffer = (acknowledged - chunkStart).toInt()
                     val remaining = read - offsetInBuffer
                     val connection = (URL(uploadUrl).openConnection() as HttpURLConnection).apply {
@@ -105,6 +105,7 @@ class DriveResumableTransfer(
                         readTimeout = READ_TIMEOUT
                     }
 
+                    var shouldRetry = false
                     try {
                         connection.outputStream.use { it.write(buffer, offsetInBuffer, remaining) }
                         when (val code = connection.responseCode) {
@@ -127,18 +128,28 @@ class DriveResumableTransfer(
                                 onBytes?.invoke(sent)
                             }
                             429, in 500..599 -> {
-                                if (++attempt > MAX_RETRIES) {
-                                    throw IllegalStateException("Google Drive upload error $code after $MAX_RETRIES retries")
-                                }
-                                Thread.sleep(500L shl (attempt - 1))
+                                shouldRetry = true
                             }
                             else -> {
                                 val body = connection.errorStream?.use { it.readBytes() } ?: ByteArray(0)
                                 throw IllegalStateException("Google Drive upload error $code: ${String(body).take(300)}")
                             }
                         }
+                    } catch (_: IOException) {
+                        shouldRetry = true
                     } finally {
                         connection.disconnect()
+                    }
+
+                    if (shouldRetry) {
+                        if (++attempt > MAX_RETRIES) {
+                            throw IllegalStateException("Google Drive upload failed after $MAX_RETRIES retries")
+                        }
+                        acknowledged = queryUploadOffset(uploadUrl, totalBytes, acknowledged)
+                            .coerceIn(chunkStart, chunkStart + read)
+                        sent = acknowledged
+                        onBytes?.invoke(sent)
+                        Thread.sleep(500L shl (attempt - 1))
                     }
                 }
             }
@@ -163,6 +174,8 @@ class DriveResumableTransfer(
                 in 200..299 -> totalBytes
                 else -> fallback
             }
+        } catch (_: IOException) {
+            fallback
         } finally {
             connection.disconnect()
         }
