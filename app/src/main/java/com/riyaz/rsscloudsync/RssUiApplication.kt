@@ -41,13 +41,12 @@ class RssUiApplication : Application() {
             }
         }
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
-            override fun onActivityPostCreated(activity: Activity, state: Bundle?) {
+            override fun onActivityCreated(activity: Activity, state: Bundle?) {
                 if (activity is MainActivity) activity.window.decorView.post {
                     polishDashboard(activity)
                     buildCloudGrid(activity)
                 }
             }
-            override fun onActivityCreated(a: Activity, s: Bundle?) = Unit
             override fun onActivityStarted(a: Activity) = Unit
             override fun onActivityResumed(a: Activity) = Unit
             override fun onActivityPaused(a: Activity) = Unit
@@ -154,7 +153,7 @@ class RssUiApplication : Application() {
         progress?.setProgressCompat(0, false)
     }
 
-    private fun loadGoogleDashboardQuota(activity: Activity, grid: GridLayout, providers: List<String>) {
+    private fun loadGoogleDashboardQuota(activity: MainActivity, grid: GridLayout, providers: List<String>) {
         val connected = activity.getSharedPreferences("rss_cloud_sync", MODE_PRIVATE).getStringSet("connected_cloud_providers", emptySet())?.contains("Google Drive") == true
         if (!connected) return
         executor.execute {
