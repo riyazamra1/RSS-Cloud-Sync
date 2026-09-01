@@ -19,6 +19,7 @@ class DriveResumableTransfer(
         private const val CHUNK_SIZE = 256 * 1024
         private const val CONNECT_TIMEOUT = 30_000
         private const val READ_TIMEOUT = 120_000
+        private const val MAX_RETRIES = 5
     }
 
     fun startSession(parentId: String?, name: String?, mimeType: String, existingId: String? = null): String {
@@ -61,13 +62,23 @@ class DriveResumableTransfer(
         } ?: throw IllegalStateException("Cannot open local file")
     }
 
-    private fun uploadStream(source: InputStream, uploadUrl: String, mimeType: String, totalBytes: Long, onBytes: ((Long) -> Unit)?, isCancelled: (() -> Boolean)?): Long {
+    private fun uploadStream(
+        source: InputStream,
+        uploadUrl: String,
+        mimeType: String,
+        totalBytes: Long,
+        onBytes: ((Long) -> Unit)?,
+        isCancelled: (() -> Boolean)?
+    ): Long {
         BufferedInputStream(source, CHUNK_SIZE).use { input ->
             val buffer = ByteArray(CHUNK_SIZE)
             var sent = 0L
+
             while (sent < totalBytes) {
                 if (isCancelled?.invoke() == true) throw TransferCancelledException()
-                val wanted = minOf(buffer.size.toLong(), totalBytes - sent).toInt()
+
+                val chunkStart = sent
+                val wanted = minOf(buffer.size.toLong(), totalBytes - chunkStart).toInt()
                 var read = 0
                 while (read < wanted) {
                     val count = input.read(buffer, read, wanted - read)
@@ -75,42 +86,89 @@ class DriveResumableTransfer(
                     read += count
                 }
                 if (read == 0) throw IllegalStateException("Local file ended before expected size")
+
+                var acknowledged = chunkStart
                 var attempt = 0
-                while (true) {
+                while (acknowledged < chunkStart + read) {
                     if (isCancelled?.invoke() == true) throw TransferCancelledException()
+
+                    val offsetInBuffer = (acknowledged - chunkStart).toInt()
+                    val remaining = read - offsetInBuffer
                     val connection = (URL(uploadUrl).openConnection() as HttpURLConnection).apply {
                         requestMethod = "PUT"
                         doOutput = true
                         setRequestProperty("Authorization", "Bearer $accessToken")
                         setRequestProperty("Content-Type", mimeType)
-                        setRequestProperty("Content-Length", read.toString())
-                        setRequestProperty("Content-Range", "bytes $sent-${sent + read - 1}/$totalBytes")
+                        setRequestProperty("Content-Length", remaining.toString())
+                        setRequestProperty("Content-Range", "bytes $acknowledged-${acknowledged + remaining - 1}/$totalBytes")
                         connectTimeout = CONNECT_TIMEOUT
                         readTimeout = READ_TIMEOUT
                     }
+
                     try {
-                        connection.outputStream.use { it.write(buffer, 0, read) }
+                        connection.outputStream.use { it.write(buffer, offsetInBuffer, remaining) }
                         when (val code = connection.responseCode) {
-                            in 200..299 -> { sent += read; onBytes?.invoke(sent); break }
-                            308 -> {
-                                val end = connection.getHeaderField("Range")?.substringAfter('-')?.toLongOrNull()
-                                if (end != null && end + 1 > sent) sent = end + 1
+                            in 200..299 -> {
+                                acknowledged = chunkStart + read
+                                sent = acknowledged
                                 onBytes?.invoke(sent)
-                                break
+                            }
+                            308 -> {
+                                val range = connection.getHeaderField("Range")
+                                val serverEnd = range?.substringAfter('-')?.toLongOrNull()
+                                acknowledged = when {
+                                    serverEnd != null -> (serverEnd + 1).coerceIn(chunkStart, chunkStart + read)
+                                    else -> queryUploadOffset(uploadUrl, totalBytes, chunkStart)
+                                }
+                                if (acknowledged > chunkStart + read) {
+                                    throw IllegalStateException("Google Drive acknowledged bytes beyond current chunk")
+                                }
+                                sent = acknowledged
+                                onBytes?.invoke(sent)
                             }
                             429, in 500..599 -> {
-                                if (++attempt > 4) throw IllegalStateException("Google Drive upload error $code")
+                                if (++attempt > MAX_RETRIES) {
+                                    throw IllegalStateException("Google Drive upload error $code after $MAX_RETRIES retries")
+                                }
                                 Thread.sleep(500L shl (attempt - 1))
                             }
-                            else -> throw IllegalStateException("Google Drive upload error $code")
+                            else -> {
+                                val body = connection.errorStream?.use { it.readBytes() } ?: ByteArray(0)
+                                throw IllegalStateException("Google Drive upload error $code: ${String(body).take(300)}")
+                            }
                         }
-                    } finally { connection.disconnect() }
+                    } finally {
+                        connection.disconnect()
+                    }
                 }
             }
             return sent
         }
     }
 
+    /** Ask Drive how many bytes the resumable session has already received. */
+    private fun queryUploadOffset(uploadUrl: String, totalBytes: Long, fallback: Long): Long {
+        val connection = (URL(uploadUrl).openConnection() as HttpURLConnection).apply {
+            requestMethod = "PUT"
+            doOutput = true
+            setRequestProperty("Authorization", "Bearer $accessToken")
+            setRequestProperty("Content-Length", "0")
+            setRequestProperty("Content-Range", "bytes */$totalBytes")
+            connectTimeout = CONNECT_TIMEOUT
+            readTimeout = READ_TIMEOUT
+        }
+        return try {
+            when (val code = connection.responseCode) {
+                308 -> connection.getHeaderField("Range")?.substringAfter('-')?.toLongOrNull()?.plus(1) ?: fallback
+                in 200..299 -> totalBytes
+                else -> fallback
+            }
+        } finally {
+            connection.disconnect()
+        }
+    }
+
     private fun enc(value: String) = URLEncoder.encode(value, "UTF-8")
+
     class TransferCancelledException : IllegalStateException("Transfer cancelled")
 }
