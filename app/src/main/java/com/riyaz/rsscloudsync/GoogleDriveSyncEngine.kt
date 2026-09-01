@@ -37,7 +37,7 @@ class GoogleDriveSyncEngine(private val context: Context, private val resolver: 
                 when(direction){
                     Direction.UPLOAD_ONLY->{if(l!=null){bytes+=drive.upload(l.uri,remoteFolderForPath(drive,driveFolderId,path,folderCache),l.name,l.mime,r?.entry?.id);uploaded++;changed++}}
                     Direction.UPLOAD_MIRROR->{if(l!=null&&(r==null||isLocalNewer(l,r))){bytes+=drive.upload(l.uri,remoteFolderForPath(drive,driveFolderId,path,folderCache),l.name,l.mime,r?.entry?.id);uploaded++;changed++}}
-                    Direction.UPLOAD_THEN_DELETE->{if(l!=null){bytes+=drive.upload(l.uri,remoteFolderForPath(drive,driveFolderId,path,folderCache),l.name,l.mime,r?.entry?.id);uploaded++;changed++;deleteLocal(l.uri)}}
+                    Direction.UPLOAD_THEN_DELETE->{if(l!=null){bytes+=drive.upload(l.uri,remoteFolderForPath(drive,driveFolderId,path,folderCache),l.name,l.mime,r?.entry?.id);uploaded++;changed++;deleteLocalAfterVerified(l.uri,l.size,bytesTransferred=bytes)}}
                     Direction.DOWNLOAD_ONLY->{if(r!=null){bytes+=downloadToLocal(drive,localTree,r,path);downloaded++;changed++}}
                     Direction.DOWNLOAD_MIRROR->{if(r!=null&&(l==null||isRemoteNewer(l,r))){bytes+=downloadToLocal(drive,localTree,r,path);downloaded++;changed++}}
                     Direction.DOWNLOAD_THEN_DELETE->{if(r!=null){bytes+=downloadToLocal(drive,localTree,r,path);downloaded++;changed++;drive.delete(r.entry.id)}}
@@ -46,9 +46,9 @@ class GoogleDriveSyncEngine(private val context: Context, private val resolver: 
             }catch(_:Exception){failed++}
             report(path)
         }
-        if(!cancelled&&direction==Direction.UPLOAD_MIRROR)for((_,item)in remote)if(!item.directory&&!local.containsKey(item.path))try{drive.delete(item.entry.id);changed++}catch(_:Exception){failed++}
-        if(!cancelled&&direction==Direction.DOWNLOAD_MIRROR)for((_,item)in local)if(!remote.containsKey(item.path))try{deleteLocal(item.uri);changed++}catch(_:Exception){failed++}
-        if(!cancelled&&options.deleteEmptySubfolders)deleteEmptyLocalFolders(localTree)
+        if(!cancelled&&failed==0&&direction==Direction.UPLOAD_MIRROR)for((_,item)in remote)if(!item.directory&&!local.containsKey(item.path))try{drive.delete(item.entry.id);changed++}catch(_:Exception){failed++}
+        if(!cancelled&&failed==0&&direction==Direction.DOWNLOAD_MIRROR)for((_,item)in local)if(!remote.containsKey(item.path))try{deleteLocal(item.uri);changed++}catch(_:Exception){failed++}
+        if(!cancelled&&failed==0&&options.deleteEmptySubfolders)deleteEmptyLocalFolders(localTree)
         return Result(processed,uploaded,downloaded,changed,failed,bytes,cancelled)
     }
 
@@ -60,7 +60,6 @@ class GoogleDriveSyncEngine(private val context: Context, private val resolver: 
 
     private fun queryName(uri:Uri):String=resolver.query(uri,arrayOf(android.provider.OpenableColumns.DISPLAY_NAME),null,null,null)?.use{if(it.moveToFirst())it.getString(0) else "file"}?:"file"
 
-    /** Uses the optimized SAF scanner once per sync run instead of maintaining a second traversal implementation here. */
     private fun indexLocal(tree:Uri,options:Options):Map<String,LocalItem>{
         val scanner=SafFileScanner(resolver)
         val result=scanner.scan(tree,SafFileScanner.Options(options.excludeHiddenFiles,options.excludeSubfolders)){_,_->if(cancelled)scanner.cancel()}
@@ -82,7 +81,19 @@ class GoogleDriveSyncEngine(private val context: Context, private val resolver: 
     private fun downloadToLocal(drive:DriveClient,localTree:Uri,remote:RemoteItem,path:String):Long{
         val parentId=ensureLocalFolder(localTree,path.substringBeforeLast('/',''));val parentUri=DocumentsContract.buildDocumentUriUsingTree(localTree,parentId);val existing=findLocalChild(localTree,parentId,remote.entry.name)
         val target=existing?.let{DocumentsContract.buildDocumentUriUsingTree(localTree,it)}?:DocumentsContract.createDocument(resolver,parentUri,remote.entry.mimeType.ifBlank{"application/octet-stream"},remote.entry.name)?:throw IllegalStateException("Unable to create local file $path")
-        resolver.openOutputStream(target,"wt").use{output->if(output==null)throw IllegalStateException("Unable to open local file $path");return drive.download(remote.entry,output)}
+        val downloaded=resolver.openOutputStream(target,"wt").use{output->if(output==null)throw IllegalStateException("Unable to open local file $path");drive.download(remote.entry,output)}
+        val actualSize=queryLocalSize(target)
+        if(!TransferVerification.canDeleteAfterVerifiedTransfer(remote.entry.size,actualSize))throw IllegalStateException("Local verification failed for '$path': expected ${remote.entry.size} bytes, found $actualSize")
+        return downloaded
+    }
+
+    private fun queryLocalSize(uri:Uri):Long=resolver.query(uri,arrayOf(android.provider.OpenableColumns.SIZE),null,null,null)?.use{if(it.moveToFirst()&&!it.isNull(0))it.getLong(0) else -1L}?:-1L
+
+    private fun deleteLocalAfterVerified(uri:Uri,expectedSize:Long,bytesTransferred:Long){
+        val actualSize=queryLocalSize(uri)
+        if(!TransferVerification.canDeleteAfterVerifiedTransfer(expectedSize,actualSize))throw IllegalStateException("Refusing to delete local file after failed verification")
+        if(expectedSize>0L&&!TransferVerification.sameSize(expectedSize,bytesTransferred))throw IllegalStateException("Refusing to delete local file after incomplete upload")
+        deleteLocal(uri)
     }
 
     private fun ensureLocalFolder(tree:Uri,path:String):String{var current=DocumentsContract.getTreeDocumentId(tree);for(part in path.split('/').filter{it.isNotBlank()}){current=findLocalChild(tree,current,part)?:run{val created=DocumentsContract.createDocument(resolver,DocumentsContract.buildDocumentUriUsingTree(tree,current),DocumentsContract.Document.MIME_TYPE_DIR,part)?:throw IllegalStateException("Unable to create local folder $part");DocumentsContract.getDocumentId(created)}};return current}
