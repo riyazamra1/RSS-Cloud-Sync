@@ -69,7 +69,7 @@ class RssUiApplication : Application() {
         root.findViewById<ViewGroup>(id("mainScrollView"))?.setBackgroundColor(background)
         root.findViewById<NavigationView>(id("navigationView"))?.apply {
             setBackgroundColor(surface); elevation = 0f; itemIconTintList = null
-            menu.setGroupDividerEnabled(true); setItemVerticalPadding(dp(3)); setItemHorizontalPadding(dp(10)); setItemIconPadding(dp(9)); setItemIconSize(dp(22))
+            setItemVerticalPadding(dp(3)); setItemHorizontalPadding(dp(10)); setItemIconPadding(dp(9)); setItemIconSize(dp(22))
         }
         root.findViewById<BottomNavigationView>(id("bottomNav"))?.apply { itemIconTintList = null }
         root.findViewById<ViewGroup>(id("appearanceCard"))?.let { selector ->
@@ -140,7 +140,7 @@ class RssUiApplication : Application() {
         parent.removeView(scroll)
         parent.addView(grid, index, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(7) })
         scroll.setTag(id("cloudAccountsScroll"), "grid-ready")
-        loadGoogleDashboardQuota(activity, grid, providers)
+        loadGoogleDashboardQuota(activity, grid)
     }
 
     private fun updateCardState(activity: Activity, card: View, provider: String) {
@@ -153,7 +153,7 @@ class RssUiApplication : Application() {
         progress?.setProgressCompat(0, false)
     }
 
-    private fun loadGoogleDashboardQuota(activity: MainActivity, grid: GridLayout, providers: List<String>) {
+    private fun loadGoogleDashboardQuota(activity: MainActivity, grid: GridLayout) {
         val connected = activity.getSharedPreferences("rss_cloud_sync", MODE_PRIVATE).getStringSet("connected_cloud_providers", emptySet())?.contains("Google Drive") == true
         if (!connected) return
         executor.execute {
