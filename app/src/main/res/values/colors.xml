@@ -14,6 +14,9 @@
     <color name="dark_text">#F8FAFF</color>
     <color name="dark_secondary_text">#9BA9BE</color>
     <color name="dark_border">#263650</color>
+    <color name="dark_accent">#6EA8FF</color>
+    <color name="dark_accent_secondary">#48D7FF</color>
+    <color name="dark_success">#43D6A2</color>
     <color name="premium_blue">#6EA8FF</color>
     <color name="premium_cyan">#48D7FF</color>
     <color name="premium_violet">#8B7CFF</color>

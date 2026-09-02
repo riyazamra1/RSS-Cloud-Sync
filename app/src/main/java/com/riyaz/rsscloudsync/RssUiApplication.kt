@@ -41,13 +41,12 @@ class RssUiApplication : Application() {
             }
         }
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
-            override fun onActivityPostCreated(activity: Activity, state: Bundle?) {
+            override fun onActivityCreated(activity: Activity, state: Bundle?) {
                 if (activity is MainActivity) activity.window.decorView.post {
                     polishDashboard(activity)
                     buildCloudGrid(activity)
                 }
             }
-            override fun onActivityCreated(a: Activity, s: Bundle?) = Unit
             override fun onActivityStarted(a: Activity) = Unit
             override fun onActivityResumed(a: Activity) = Unit
             override fun onActivityPaused(a: Activity) = Unit
@@ -70,7 +69,7 @@ class RssUiApplication : Application() {
         root.findViewById<ViewGroup>(id("mainScrollView"))?.setBackgroundColor(background)
         root.findViewById<NavigationView>(id("navigationView"))?.apply {
             setBackgroundColor(surface); elevation = 0f; itemIconTintList = null
-            menu.setGroupDividerEnabled(true); setItemVerticalPadding(dp(3)); setItemHorizontalPadding(dp(10)); setItemIconPadding(dp(9)); setItemIconSize(dp(22))
+            setItemVerticalPadding(dp(3)); setItemHorizontalPadding(dp(10)); setItemIconPadding(dp(9)); setItemIconSize(dp(22))
         }
         root.findViewById<BottomNavigationView>(id("bottomNav"))?.apply { itemIconTintList = null }
         root.findViewById<ViewGroup>(id("appearanceCard"))?.let { selector ->
@@ -121,7 +120,7 @@ class RssUiApplication : Application() {
                 rowSpec = GridLayout.spec(index / 2); columnSpec = GridLayout.spec(index % 2)
             }
             (card as? MaterialCardView)?.let { it.radius = dp(18).toFloat(); it.cardElevation = dp(1).toFloat() }
-            val inner = card.getChildAt(0) as? ViewGroup
+            val inner = (card as? ViewGroup)?.getChildAt(0) as? ViewGroup
             inner?.let {
                 it.setPadding(dp(8), dp(8), dp(8), dp(8))
                 if (it.findViewWithTag<LinearProgressIndicator>("rss-cloud-progress") == null) {
@@ -141,7 +140,7 @@ class RssUiApplication : Application() {
         parent.removeView(scroll)
         parent.addView(grid, index, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(7) })
         scroll.setTag(id("cloudAccountsScroll"), "grid-ready")
-        loadGoogleDashboardQuota(activity, grid, providers)
+        loadGoogleDashboardQuota(activity, grid)
     }
 
     private fun updateCardState(activity: Activity, card: View, provider: String) {
@@ -154,7 +153,7 @@ class RssUiApplication : Application() {
         progress?.setProgressCompat(0, false)
     }
 
-    private fun loadGoogleDashboardQuota(activity: Activity, grid: GridLayout, providers: List<String>) {
+    private fun loadGoogleDashboardQuota(activity: MainActivity, grid: GridLayout) {
         val connected = activity.getSharedPreferences("rss_cloud_sync", MODE_PRIVATE).getStringSet("connected_cloud_providers", emptySet())?.contains("Google Drive") == true
         if (!connected) return
         executor.execute {

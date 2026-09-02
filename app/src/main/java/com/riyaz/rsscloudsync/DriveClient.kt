@@ -65,6 +65,21 @@ class DriveClient(private val context: Context) {
 
     fun findChild(parentId: String, name: String): Entry? = listChildren(parentId).firstOrNull { it.name == name }
 
+    fun getEntry(fileId: String): Entry {
+        val json = JSONObject(String(request(
+            "GET",
+            "https://www.googleapis.com/drive/v3/files/${enc(fileId)}?fields=id,name,mimeType,size,modifiedTime,parents"
+        )))
+        return Entry(
+            json.getString("id"),
+            json.optString("name"),
+            json.optString("mimeType"),
+            json.optLong("size", 0L),
+            parseTime(json.optString("modifiedTime")),
+            json.optJSONArray("parents")?.optString(0).orEmpty()
+        )
+    }
+
     fun createFolder(parentId: String, name: String): String {
         val existing = findChild(parentId, name)
         if (existing != null) {
@@ -97,12 +112,29 @@ class DriveClient(private val context: Context) {
 
     fun upload(uri: Uri, parentId: String, name: String, mime: String, existingId: String? = null, onBytes: ((Long) -> Unit)? = null): Long {
         val size = querySize(uri)
-        if (size >= 0L) {
+        val transferred = if (size >= 0L) {
             val transfer = DriveResumableTransfer(context.contentResolver, token())
             val session = transfer.startSession(parentId.takeIf { existingId == null }, name.takeIf { existingId == null }, mime, existingId)
-            return transfer.upload(uri, session, mime, size, onBytes)
+            transfer.upload(uri, session, mime, size, onBytes)
+        } else if (existingId != null) {
+            updateMedia(existingId, uri, mime, onBytes)
+        } else {
+            uploadNew(uri, parentId, name, mime, onBytes)
         }
-        return if (existingId != null) updateMedia(existingId, uri, mime, onBytes) else uploadNew(uri, parentId, name, mime, onBytes)
+
+        verifyUploadedFile(parentId, name, existingId, size, transferred)
+        return transferred
+    }
+
+    private fun verifyUploadedFile(parentId: String, name: String, existingId: String?, expectedSize: Long, transferred: Long) {
+        if (!TransferVerification.sameSize(expectedSize, transferred)) {
+            throw IllegalStateException("Upload size mismatch before verification")
+        }
+        val remote = if (existingId != null) getEntry(existingId) else findChild(parentId, name)
+            ?: throw IllegalStateException("Uploaded file could not be verified on Google Drive")
+        if (!TransferVerification.sameSize(expectedSize, remote.size)) {
+            throw IllegalStateException("Google Drive verification failed for '$name': expected $expectedSize bytes, found ${remote.size}")
+        }
     }
 
     private fun querySize(uri: Uri): Long = context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.SIZE), null, null, null)?.use {
@@ -168,7 +200,15 @@ class DriveClient(private val context: Context) {
     fun delete(id: String) { request("DELETE", "https://www.googleapis.com/drive/v3/files/${enc(id)}") }
 
     private fun enc(value: String) = URLEncoder.encode(value, "UTF-8")
-    private fun parseTime(value: String): Long = try { SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US).parse(value)?.time ?: 0L } catch (_: Exception) { 0L }
+    private fun parseTime(value: String): Long = try {
+        val normalized = when {
+            value.endsWith("Z") -> value.dropLast(1) + "+0000"
+            value.length >= 6 && (value[value.length - 6] == '+' || value[value.length - 6] == '-') && value[value.length - 3] == ':' ->
+                value.dropLast(3) + value.takeLast(2)
+            else -> value
+        }
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US).parse(normalized)?.time ?: 0L
+    } catch (_: Exception) { 0L }
     private fun formatBytes(value: Long): String {
         if (value < 1024L) return "$value B"
         if (value < 1024L * 1024L) return String.format(Locale.getDefault(), "%.1f KB", value / 1024.0)

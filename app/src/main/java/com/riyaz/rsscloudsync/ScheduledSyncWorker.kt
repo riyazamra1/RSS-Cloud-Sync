@@ -51,9 +51,18 @@ class ScheduledSyncWorker(appContext: Context, workerParams: WorkerParameters) :
                 timestamp = System.currentTimeMillis(), direction = directionName, filesProcessed = result.processed,
                 filesChanged = result.uploaded + result.downloaded, uploadedFiles = result.uploaded, downloadedFiles = result.downloaded,
                 failedFiles = result.failed, bytesTransferred = result.bytes, durationMs = System.currentTimeMillis() - started,
-                success = result.failed == 0, message = if (result.failed == 0) "Scheduled sync completed" else "Scheduled sync completed with warnings"
+                success = result.failed == 0 && !result.cancelled,
+                message = when {
+                    result.cancelled -> "Scheduled sync cancelled"
+                    result.failed == 0 -> "Scheduled sync completed"
+                    else -> "Scheduled sync completed with ${result.failed} file error${if (result.failed == 1) "" else "s"}; retry scheduled"
+                }
             ))
-            Result.success()
+            when {
+                result.cancelled -> Result.success()
+                result.failed > 0 -> Result.retry()
+                else -> Result.success()
+            }
         } catch (_: Exception) {
             SyncHistoryManager.add(applicationContext, SyncHistoryManager.Entry(
                 timestamp = System.currentTimeMillis(), direction = directionName, filesProcessed = 0, filesChanged = 0, failedFiles = 1,
