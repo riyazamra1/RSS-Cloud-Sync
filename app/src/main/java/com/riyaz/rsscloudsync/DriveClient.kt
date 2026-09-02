@@ -200,7 +200,15 @@ class DriveClient(private val context: Context) {
     fun delete(id: String) { request("DELETE", "https://www.googleapis.com/drive/v3/files/${enc(id)}") }
 
     private fun enc(value: String) = URLEncoder.encode(value, "UTF-8")
-    private fun parseTime(value: String): Long = try { SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US).parse(value)?.time ?: 0L } catch (_: Exception) { 0L }
+    private fun parseTime(value: String): Long = try {
+        val normalized = when {
+            value.endsWith("Z") -> value.dropLast(1) + "+0000"
+            value.length >= 6 && (value[value.length - 6] == '+' || value[value.length - 6] == '-') && value[value.length - 3] == ':' ->
+                value.dropLast(3) + value.takeLast(2)
+            else -> value
+        }
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US).parse(normalized)?.time ?: 0L
+    } catch (_: Exception) { 0L }
     private fun formatBytes(value: Long): String {
         if (value < 1024L) return "$value B"
         if (value < 1024L * 1024L) return String.format(Locale.getDefault(), "%.1f KB", value / 1024.0)
