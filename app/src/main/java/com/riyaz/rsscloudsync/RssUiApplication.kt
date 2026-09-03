@@ -66,37 +66,18 @@ class RssUiApplication : Application() {
         val surface = if (light) Color.WHITE else Color.rgb(15, 22, 36)
         val background = if (light) Color.rgb(247, 248, 252) else Color.rgb(7, 11, 20)
         val outline = if (light) Color.rgb(225, 228, 236) else Color.rgb(38, 51, 73)
-
         root.findViewById<ViewGroup>(id("mainScrollView"))?.setBackgroundColor(background)
-        root.findViewById<NavigationView>(id("navigationView"))?.apply {
-            setBackgroundColor(surface); elevation = 0f; itemIconTintList = null
-            menu.setGroupDividerEnabled(true); setItemVerticalPadding(dp(3)); setItemHorizontalPadding(dp(10)); setItemIconPadding(dp(9)); setItemIconSize(dp(22))
-        }
+        root.findViewById<NavigationView>(id("navigationView"))?.apply { setBackgroundColor(surface); elevation = 0f; itemIconTintList = null; menu.setGroupDividerEnabled(true); setItemVerticalPadding(dp(3)); setItemHorizontalPadding(dp(10)); setItemIconPadding(dp(9)); setItemIconSize(dp(22)) }
         root.findViewById<BottomNavigationView>(id("bottomNav"))?.apply { itemIconTintList = null }
-        root.findViewById<ViewGroup>(id("appearanceCard"))?.let { selector ->
-            selector.background = GradientDrawable().apply { cornerRadius = dp(22).toFloat(); setColor(surface); setStroke(dp(1), outline) }
-            selector.layoutParams = selector.layoutParams.apply { height = dp(48) }; selector.requestLayout()
-        }
+        root.findViewById<ViewGroup>(id("appearanceCard"))?.let { selector -> selector.background = GradientDrawable().apply { cornerRadius = dp(22).toFloat(); setColor(surface); setStroke(dp(1), outline) }; selector.layoutParams = selector.layoutParams.apply { height = dp(48) }; selector.requestLayout() }
         setHeight<MaterialCardView>(root, activity, "premiumBanner", 184)
         setHeight<MaterialCardView>(root, activity, "syncStatusCard", 204)
         setHeight<MaterialCardView>(root, activity, "foldersCard", 88)
         setHeight<MaterialCardView>(root, activity, "syncSetupCard", 88)
         setHeight<BottomNavigationView>(root, activity, "bottomNav", 66)
-        root.findViewById<ViewGroup>(id("contentLayout"))?.let { content ->
-            for (i in 0 until content.childCount) {
-                val child = content.getChildAt(i); val lp = child.layoutParams
-                if (lp is ViewGroup.MarginLayoutParams && lp.topMargin > dp(10)) { lp.topMargin = dp(8); child.layoutParams = lp }
-            }
-        }
+        root.findViewById<ViewGroup>(id("contentLayout"))?.let { content -> for (i in 0 until content.childCount) { val child = content.getChildAt(i); val lp = child.layoutParams; if (lp is ViewGroup.MarginLayoutParams && lp.topMargin > dp(10)) { lp.topMargin = dp(8); child.layoutParams = lp } } }
         root.findViewById<MaterialButton>(id("syncNowButton"))?.let { it.layoutParams = it.layoutParams.apply { width = ViewGroup.LayoutParams.MATCH_PARENT; height = dp(44) }; it.requestLayout() }
-        root.findViewById<Toolbar>(id("toolbar"))?.let { toolbar ->
-            if (toolbar.menu.findItem(R.id.action_notifications) == null) {
-                toolbar.inflateMenu(R.menu.main_toolbar_menu)
-                toolbar.setOnMenuItemClickListener { item: MenuItem ->
-                    if (item.itemId == R.id.action_notifications) { activity.startActivity(android.content.Intent(activity, NotificationsActivity::class.java)); true } else false
-                }
-            }
-        }
+        root.findViewById<Toolbar>(id("toolbar"))?.let { toolbar -> if (toolbar.menu.findItem(R.id.action_notifications) == null) { toolbar.inflateMenu(R.menu.main_toolbar_menu); toolbar.setOnMenuItemClickListener { item: MenuItem -> if (item.itemId == R.id.action_notifications) { activity.startActivity(android.content.Intent(activity, NotificationsActivity::class.java)); true } else false } } }
     }
 
     private fun buildCloudGrid(activity: MainActivity) {
@@ -116,19 +97,13 @@ class RssUiApplication : Application() {
         val grid = GridLayout(activity).apply { columnCount = 2; useDefaultMargins = false; alignmentMode = GridLayout.ALIGN_BOUNDS }
         cards.forEachIndexed { index, card ->
             row.removeView(card)
-            card.layoutParams = GridLayout.LayoutParams().apply {
-                width = cellWidth; height = dp(138); setMargins(dp(2), dp(2), dp(2), dp(6))
-                rowSpec = GridLayout.spec(index / 2); columnSpec = GridLayout.spec(index % 2)
-            }
+            card.layoutParams = GridLayout.LayoutParams().apply { width = cellWidth; height = dp(138); setMargins(dp(2), dp(2), dp(2), dp(6)); rowSpec = GridLayout.spec(index / 2); columnSpec = GridLayout.spec(index % 2) }
             (card as? MaterialCardView)?.let { it.radius = dp(18).toFloat(); it.cardElevation = dp(1).toFloat() }
-            val inner = card.getChildAt(0) as? ViewGroup
+            val inner = (card as? ViewGroup)?.getChildAt(0) as? ViewGroup
             inner?.let {
                 it.setPadding(dp(8), dp(8), dp(8), dp(8))
                 if (it.findViewWithTag<LinearProgressIndicator>("rss-cloud-progress") == null) {
-                    val progress = LinearProgressIndicator(activity).apply {
-                        tag = "rss-cloud-progress"; max = 100; progress = 0; isIndeterminate = false
-                        trackThickness = dp(4); setTrackCornerRadius(dp(4))
-                    }
+                    val progress = LinearProgressIndicator(activity).apply { tag = "rss-cloud-progress"; max = 100; progress = 0; isIndeterminate = false; trackThickness = dp(4); setTrackCornerRadius(dp(4)) }
                     val buttonIndex = (0 until it.childCount).firstOrNull { n -> it.getChildAt(n) is MaterialButton } ?: it.childCount
                     it.addView(progress, buttonIndex, LinearLayout.LayoutParams(-1, dp(4)).apply { topMargin = dp(4) })
                 }
@@ -154,7 +129,7 @@ class RssUiApplication : Application() {
         progress?.setProgressCompat(0, false)
     }
 
-    private fun loadGoogleDashboardQuota(activity: Activity, grid: GridLayout, providers: List<String>) {
+    private fun loadGoogleDashboardQuota(activity: MainActivity, grid: GridLayout, providers: List<String>) {
         val connected = activity.getSharedPreferences("rss_cloud_sync", MODE_PRIVATE).getStringSet("connected_cloud_providers", emptySet())?.contains("Google Drive") == true
         if (!connected) return
         executor.execute {
@@ -174,11 +149,7 @@ class RssUiApplication : Application() {
     }
 
     private fun findProviderStatus(parent: ViewGroup): TextView? {
-        for (i in 0 until parent.childCount) {
-            val child = parent.getChildAt(i)
-            if (child is TextView && child !is MaterialButton && child.text.toString() in listOf("Not connected", "Connected", "Ready to connect")) return child
-            if (child is ViewGroup) findProviderStatus(child)?.let { return it }
-        }
+        for (i in 0 until parent.childCount) { val child = parent.getChildAt(i); if (child is TextView && child !is MaterialButton && child.text.toString() in listOf("Not connected", "Connected", "Ready to connect")) return child; if (child is ViewGroup) findProviderStatus(child)?.let { return it } }
         return null
     }
 
@@ -191,9 +162,7 @@ class RssUiApplication : Application() {
     }
 
     private inline fun <reified T : ViewGroup> setHeight(root: View, activity: Activity, idName: String, heightDp: Int) {
-        root.findViewById<T>(activity.resources.getIdentifier(idName, "id", activity.packageName))?.let { view ->
-            view.layoutParams = view.layoutParams.apply { height = (heightDp * activity.resources.displayMetrics.density).toInt() }; view.requestLayout()
-        }
+        root.findViewById<T>(activity.resources.getIdentifier(idName, "id", activity.packageName))?.let { view -> view.layoutParams = view.layoutParams.apply { height = (heightDp * activity.resources.displayMetrics.density).toInt() }; view.requestLayout() }
     }
 
     override fun onTerminate() { executor.shutdownNow(); super.onTerminate() }
