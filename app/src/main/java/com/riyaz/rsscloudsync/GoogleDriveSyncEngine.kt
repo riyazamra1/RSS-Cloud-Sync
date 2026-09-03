@@ -75,12 +75,22 @@ class GoogleDriveSyncEngine(private val context: Context, private val resolver: 
     }
 
     private fun remoteFolderForPath(drive:DriveClient,rootId:String,path:String,cache:MutableMap<String,String>):String{
-        val folderPath=path.substringBeforeLast('/','');if(folderPath.isBlank())return rootId;cache[folderPath]?.let{return it};var parent=rootId;val built=StringBuilder()
-        for(part in folderPath.split('/').filter{it.isNotBlank()}){if(built.isNotEmpty())built.append('/');built.append(part);val key=built.toString();parent=cache[key]?:drive.createFolder(parent,part).also{cache[key]=it}};return parent
+        val folderPath=path.substringBeforeLast("/")
+        if(folderPath.isBlank())return rootId
+        cache[folderPath]?.let{return it}
+        var parent=rootId
+        val built=StringBuilder()
+        for(part in folderPath.split('/').filter{it.isNotBlank()}){
+            if(built.isNotEmpty())built.append('/')
+            built.append(part)
+            val key=built.toString()
+            parent=cache[key]?:drive.createFolder(parent,part).also{cache[key]=it}
+        }
+        return parent
     }
 
     private fun downloadToLocal(drive:DriveClient,localTree:Uri,remote:RemoteItem,path:String):Long{
-        val parentId=ensureLocalFolder(localTree,path.substringBeforeLast('/',''));val parentUri=DocumentsContract.buildDocumentUriUsingTree(localTree,parentId);val existing=findLocalChild(localTree,parentId,remote.entry.name)
+        val parentId=ensureLocalFolder(localTree,path.substringBeforeLast("/"));val parentUri=DocumentsContract.buildDocumentUriUsingTree(localTree,parentId);val existing=findLocalChild(localTree,parentId,remote.entry.name)
         val target=existing?.let{DocumentsContract.buildDocumentUriUsingTree(localTree,it)}?:DocumentsContract.createDocument(resolver,parentUri,remote.entry.mimeType.ifBlank{"application/octet-stream"},remote.entry.name)?:throw IllegalStateException("Unable to create local file $path")
         resolver.openOutputStream(target,"wt").use{output->if(output==null)throw IllegalStateException("Unable to open local file $path");return drive.download(remote.entry,output)}
     }
