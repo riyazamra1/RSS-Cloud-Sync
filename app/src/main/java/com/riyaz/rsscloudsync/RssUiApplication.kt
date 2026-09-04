@@ -123,7 +123,7 @@ class RssUiApplication : Application() {
                 rowSpec = GridLayout.spec(index / 2); columnSpec = GridLayout.spec(index % 2)
             }
             (card as? MaterialCardView)?.let { it.radius = dp(18).toFloat(); it.cardElevation = dp(1).toFloat() }
-            val inner = card.getChildAt(0) as? ViewGroup
+            val inner = (card as? ViewGroup)?.getChildAt(0) as? ViewGroup
             inner?.let {
                 it.setPadding(dp(8), dp(8), dp(8), dp(8))
                 if (it.findViewWithTag<LinearProgressIndicator>("rss-cloud-progress") == null) {
