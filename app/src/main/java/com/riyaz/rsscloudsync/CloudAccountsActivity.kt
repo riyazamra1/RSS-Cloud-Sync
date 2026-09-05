@@ -85,7 +85,7 @@ class CloudAccountsActivity : AppCompatActivity() {
     private fun selectProvider(provider: String) {
         val connected = (prefs.getStringSet("connected_cloud_providers", emptySet()) ?: emptySet()).toMutableSet().apply { add(provider) }
         prefs.edit().putStringSet("connected_cloud_providers", connected).putString("cloud_provider", provider).putString("selected_cloud_provider", provider).apply()
-        startActivity(Intent(this, SyncSetupActivity::class.java).putExtra("new_pair", true))
+        startActivity(Intent(this, GenericCloudSyncActivity::class.java).putExtra("provider", provider))
     }
 
     private fun refreshState() {
