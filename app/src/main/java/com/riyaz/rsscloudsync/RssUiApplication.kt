@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
@@ -70,7 +71,8 @@ class RssUiApplication : Application() {
         root.findViewById<ViewGroup>(id("mainScrollView"))?.setBackgroundColor(background)
         root.findViewById<NavigationView>(id("navigationView"))?.apply {
             setBackgroundColor(surface); elevation = 0f; itemIconTintList = null
-            menu.setGroupDividerEnabled(true); setItemVerticalPadding(dp(3)); setItemHorizontalPadding(dp(10)); setItemIconPadding(dp(9)); setItemIconSize(dp(22))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) menu.setGroupDividerEnabled(true)
+            setItemVerticalPadding(dp(3)); setItemHorizontalPadding(dp(10)); setItemIconPadding(dp(9)); setItemIconSize(dp(22))
         }
         root.findViewById<BottomNavigationView>(id("bottomNav"))?.apply { itemIconTintList = null }
         root.findViewById<ViewGroup>(id("appearanceCard"))?.let { selector ->
@@ -121,7 +123,7 @@ class RssUiApplication : Application() {
                 rowSpec = GridLayout.spec(index / 2); columnSpec = GridLayout.spec(index % 2)
             }
             (card as? MaterialCardView)?.let { it.radius = dp(18).toFloat(); it.cardElevation = dp(1).toFloat() }
-            val inner = card.getChildAt(0) as? ViewGroup
+            val inner = (card as? ViewGroup)?.getChildAt(0) as? ViewGroup
             inner?.let {
                 it.setPadding(dp(8), dp(8), dp(8), dp(8))
                 if (it.findViewWithTag<LinearProgressIndicator>("rss-cloud-progress") == null) {
@@ -154,7 +156,7 @@ class RssUiApplication : Application() {
         progress?.setProgressCompat(0, false)
     }
 
-    private fun loadGoogleDashboardQuota(activity: Activity, grid: GridLayout, providers: List<String>) {
+    private fun loadGoogleDashboardQuota(activity: MainActivity, grid: GridLayout, providers: List<String>) {
         val connected = activity.getSharedPreferences("rss_cloud_sync", MODE_PRIVATE).getStringSet("connected_cloud_providers", emptySet())?.contains("Google Drive") == true
         if (!connected) return
         executor.execute {

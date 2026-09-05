@@ -65,7 +65,10 @@ object SyncPairStore {
         )
         val encoded = encode(pair)
         val set = (prefs.getStringSet(KEY, emptySet()) ?: emptySet()).toMutableSet()
-        set.removeIf { decode(it)?.id == id }
+        val iterator = set.iterator()
+        while (iterator.hasNext()) {
+            if (decode(iterator.next())?.id == id) iterator.remove()
+        }
         set.add(encoded)
         prefs.edit().putStringSet(KEY, set).putString("active_pair_id", id).apply()
         return id
@@ -94,7 +97,10 @@ object SyncPairStore {
 
     fun delete(prefs: SharedPreferences, id: String) {
         val set = (prefs.getStringSet(KEY, emptySet()) ?: emptySet()).toMutableSet()
-        set.removeIf { decode(it)?.id == id }
+        val iterator = set.iterator()
+        while (iterator.hasNext()) {
+            if (decode(iterator.next())?.id == id) iterator.remove()
+        }
         val editor = prefs.edit().putStringSet(KEY, set)
         if (prefs.getString("active_pair_id", null) == id) editor.remove("active_pair_id")
         editor.apply()

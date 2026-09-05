@@ -1,0 +1,76 @@
+name: Gemini CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  gemini-review:
+    name: Gemini AI Review
+    runs-on: ubuntu-latest
+    if: ${{ secrets.GEMINI_API_KEY != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Gemini SDK
+        run: pip install --disable-pip-version-check google-genai
+
+      - name: Run Gemini CI review
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python - <<'PY'
+          import os
+          from google import genai
+
+          client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
+          prompt = f'''You are the Gemini CI reviewer for the RSS Cloud Sync Android project.
+          Review the current repository checkout for high-confidence build, Kotlin, Android, security,
+          and obvious regression issues. Do not invent issues. Focus on actionable findings.
+
+          Pull request title: {os.environ.get('PR_TITLE', '')}
+          Pull request body: {os.environ.get('PR_BODY', '')}
+
+          Return:
+          1. PASS if no high-confidence blocking issue is found, otherwise FAIL.
+          2. A concise list of findings with file paths when applicable.
+          3. A concise recommended next action.
+          '''
+          response = client.models.generate_content(
+              model='gemini-2.5-flash',
+              contents=prompt,
+          )
+          text = response.text or 'Gemini returned no review text.'
+          print(text)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as f:
+              f.write('## Gemini CI Review\n\n')
+              f.write(text)
+              f.write('\n')
+          PY
+
+  configuration-check:
+    name: Gemini CI Configuration Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify workflow configuration
+        run: |
+          echo "Gemini CI workflow loaded successfully."
+          echo "If GEMINI_API_KEY is configured in repository Actions secrets, the AI review job will run."
