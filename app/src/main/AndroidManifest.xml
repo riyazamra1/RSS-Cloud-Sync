@@ -13,6 +13,7 @@
         <activity android:name=".NotificationsActivity" android:exported="false" />
         <activity android:name=".SyncPairsActivity" android:exported="false" />
         <activity android:name=".SyncSetupActivity" android:exported="false" />
+        <activity android:name=".GenericCloudSyncActivity" android:exported="false" />
         <activity android:name=".GoogleDriveFolderPickerActivity" android:exported="false" />
         <activity android:name=".FolderSyncActivity" android:exported="false" />
         <activity android:name=".ExternalStorageActivity" android:exported="false" />
