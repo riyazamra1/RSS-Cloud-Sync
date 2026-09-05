@@ -1,6 +1,7 @@
 package com.riyaz.rsscloudsync
 
 import android.content.Intent
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
@@ -35,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     private fun buildShell() {
         root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(0xFFF7F8FC.toInt()) }
         val header = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(dp(20), dp(18), dp(20), dp(12)) }
-        title = TextView(this).apply { text = "RSS CLOUD SYNC"; textSize = 22f; setTypeface(typeface, 1); layoutParams = LinearLayout.LayoutParams(0, -2, 1f) }
+        title = TextView(this).apply { text = "RSS CLOUD SYNC"; textSize = 22f; setTypeface(typeface, Typeface.BOLD); layoutParams = LinearLayout.LayoutParams(0, -2, 1f) }
         header.addView(title); header.addView(TextView(this).apply { text = "🔔"; textSize = 20f; setOnClickListener { startActivity(Intent(this@MainActivity, NotificationsActivity::class.java)) } })
         content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(20), 0, dp(20), dp(12)) }
         val scroll = ScrollView(this).apply { addView(content); layoutParams = LinearLayout.LayoutParams(-1, 0, 1f) }
@@ -81,10 +82,10 @@ class MainActivity : AppCompatActivity() {
         addCard("Storage", "Local and external folder access"); addAction("STORAGE") { startActivity(Intent(this, ExternalStorageActivity::class.java)) }
         addCard("Premium", "Additional cloud and automation capabilities"); addAction("VIEW PREMIUM") { startActivity(Intent(this, PremiumActivity::class.java)) }; addAction("ABOUT RSS CLOUD SYNC") { startActivity(Intent(this, AboutActivity::class.java)) }
     }
-    private fun addHero(head: String, sub: String) { val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(20), dp(24), dp(20), dp(24)); setBackgroundColor(0xFF111827.toInt()) }; box.addView(TextView(this).apply { text = head; textSize = 28f; setTextColor(-1); setTypeface(typeface, 1) }); box.addView(TextView(this).apply { text = sub; textSize = 13f; setTextColor(0xFFD1D5DB.toInt()); setPadding(0, dp(9), 0, 0) }); content.addView(box, margins(0,0,0,16)) }
-    private fun addSection(text: String) { content.addView(TextView(this).apply { this.text = text; textSize = 17f; setTypeface(typeface,1); setPadding(0,dp(16),0,dp(8)) }) }
+    private fun addHero(head: String, sub: String) { val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(20), dp(24), dp(20), dp(24)); setBackgroundColor(0xFF111827.toInt()) }; box.addView(TextView(this).apply { text = head; textSize = 28f; setTextColor(-1); setTypeface(typeface, Typeface.BOLD) }); box.addView(TextView(this).apply { text = sub; textSize = 13f; setTextColor(0xFFD1D5DB.toInt()); setPadding(0, dp(9), 0, 0) }); content.addView(box, margins(0,0,0,16)) }
+    private fun addSection(text: String) { content.addView(TextView(this).apply { this.text = text; textSize = 17f; setTypeface(typeface, Typeface.BOLD); setPadding(0,dp(16),0,dp(8)) }) }
     private fun addMuted(text: String) { content.addView(TextView(this).apply { this.text = text; textSize = 13f; setTextColor(0xFF5F6675.toInt()); setPadding(0,dp(5),0,dp(7)) }) }
-    private fun addCard(head: String, body: String) { val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16),dp(14),dp(16),dp(14)); setBackgroundColor(-1) }; box.addView(TextView(this).apply { text=head; textSize=15f; setTypeface(typeface,1) }); box.addView(TextView(this).apply { text=body; textSize=13f; setTextColor(0xFF5F6675.toInt()); setPadding(0,dp(5),0,0) }); content.addView(box,margins(0,0,0,9)) }
+    private fun addCard(head: String, body: String) { val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16),dp(14),dp(16),dp(14)); setBackgroundColor(-1) }; box.addView(TextView(this).apply { text=head; textSize=15f; setTypeface(typeface,Typeface.BOLD) }); box.addView(TextView(this).apply { text=body; textSize=13f; setTextColor(0xFF5F6675.toInt()); setPadding(0,dp(5),0,0) }); content.addView(box,margins(0,0,0,9)) }
     private fun addAction(text: String, click: () -> Unit) { content.addView(Button(this).apply { this.text=text; isAllCaps=false; setOnClickListener { click() } },margins(0,0,0,8)) }
     private fun margins(l:Int,t:Int,r:Int,b:Int)=LinearLayout.LayoutParams(-1,-2).apply{setMargins(dp(l),dp(t),dp(r),dp(b))}
     private fun queryName(uri: Uri): String { contentResolver.query(uri,arrayOf(OpenableColumns.DISPLAY_NAME),null,null,null)?.use{if(it.moveToFirst())return it.getString(0)}; return uri.lastPathSegment ?: "File" }
