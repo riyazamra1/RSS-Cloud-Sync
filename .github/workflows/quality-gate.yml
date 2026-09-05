@@ -2,7 +2,7 @@ name: RSS Cloud Sync Quality Gate
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/kotlin-build-errors]
   pull_request:
     branches: [main]
   workflow_dispatch:
